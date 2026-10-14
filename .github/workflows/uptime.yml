@@ -1,0 +1,25 @@
+# Keeps the hosted demo honest through the judging period (live and free until Dec 15, 2026).
+# Set the repository variable WHY_DEMO_URL, e.g. https://why-demo.example.com
+name: Demo uptime
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    if: ${{ vars.WHY_DEMO_URL != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dashboard, API, snapshot fallback and remote MCP respond
+        env:
+          URL: ${{ vars.WHY_DEMO_URL }}
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 20 "$URL/" > /dev/null
+          curl -fsS --max-time 20 "$URL/api/health" | grep -q '"ok":true'
+          curl -fsS --max-time 20 "$URL/snapshot.json" | grep -q '"decisions"'
+          curl -fsS --max-time 20 -X POST "$URL/mcp/" \
+            -H 'accept: application/json, text/event-stream' -H 'content-type: application/json' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | grep -q why_decisions_for
+          echo "demo is up"

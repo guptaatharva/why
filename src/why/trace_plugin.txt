@@ -1,0 +1,59 @@
+"""pytest plugin injected by `why upgrade`: records calls from user code into one package.
+
+For every test it records (function, args, return value) for each call that crosses
+from outside the package into it. Running the same guard under the old and the new
+version and diffing these traces points at the library API whose behaviour changed.
+"""
+
+import json
+import os
+import sys
+
+import pytest
+
+PKG = os.environ.get("WHY_TRACE_PKG", "")
+OUT = os.environ.get("WHY_TRACE_OUT", "")
+_traces = {}
+
+
+def _in_pkg(frame):
+    name = frame.f_globals.get("__name__", "") if frame else ""
+    return name == PKG or name.startswith(PKG + ".")
+
+
+def _short(v):
+    try:
+        r = repr(v)
+    except Exception as e:  # noqa: BLE001
+        r = f"<unrepr {type(v).__name__}: {e}>"
+    return r if len(r) <= 300 else r[:297] + "..."
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_call(item):
+    calls, pending = [], {}
+
+    def prof(frame, event, arg):
+        if event == "call" and _in_pkg(frame) and not _in_pkg(frame.f_back):
+            code = frame.f_code
+            names = code.co_varnames[: code.co_argcount + code.co_kwonlyargcount]
+            pending[id(frame)] = (f"{frame.f_globals.get('__name__')}.{code.co_qualname if hasattr(code, 'co_qualname') else code.co_name}",
+                                  {n: _short(frame.f_locals.get(n)) for n in names})
+        elif event == "return" and id(frame) in pending:
+            fn, args = pending.pop(id(frame))
+            if len(calls) < 500:
+                calls.append({"fn": fn, "args": args, "ret": _short(arg)})
+
+    if PKG:
+        sys.setprofile(prof)
+    try:
+        yield
+    finally:
+        sys.setprofile(None)
+        _traces[item.nodeid] = calls
+
+
+def pytest_sessionfinish(session):
+    if OUT:
+        with open(OUT, "w") as f:
+            json.dump(_traces, f)

@@ -1,0 +1,36 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Node
+node_modules/
+web/dist/
+
+# Generated
+demo/out/
+why-snapshot.json
+.why-venv/
+*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local agent config
+CLAUDE.md
+.claude/
+.mcp.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

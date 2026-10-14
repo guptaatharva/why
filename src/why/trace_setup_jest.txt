@@ -1,0 +1,54 @@
+// Injected by `why upgrade` (Jest setupFilesAfterEnv): records every call from the project into one package,
+// so the same guard run under the old and the new version can be diffed to find the API that changed.
+// Names start with "mock" because jest.mock factories may only reference such variables.
+const mockFs = require("fs");
+const mockCalls = [];
+
+const mockShow = (v) => {
+  let s;
+  try {
+    s = v instanceof Date ? `Date(${v.toISOString()})` : typeof v === "function" ? `[Function ${v.name}]`
+      : v === undefined ? "undefined" : JSON.stringify(v) ?? String(v);
+  } catch {
+    s = String(v);
+  }
+  return s.length > 300 ? s.slice(0, 297) + "..." : s;
+};
+
+const mockWrap = (name, fn) =>
+  function (...args) {
+    const rec = { fn: `__WHY_PKG__.${name}`, args: Object.fromEntries(args.map((a, i) => [`arg${i}`, mockShow(a)])), ret: "" };
+    const ret = fn.apply(this, args);
+    if (ret && typeof ret.then === "function") {
+      return ret.then((v) => {
+        rec.ret = mockShow(v);
+        if (mockCalls.length < 500) mockCalls.push(rec);
+        return v;
+      });
+    }
+    rec.ret = mockShow(ret);
+    if (mockCalls.length < 500) mockCalls.push(rec);
+    return ret;
+  };
+
+const mockWrapAll = (mod) => {
+  const out = { ...mod };
+  for (const [k, v] of Object.entries(mod)) {
+    if (typeof v === "function" && !/^[A-Z]/.test(k)) out[k] = mockWrap(k, v);
+  }
+  return out;
+};
+
+jest.mock("__WHY_PKG__", () => mockWrapAll(jest.requireActual("__WHY_PKG__")));
+
+afterAll(() => {
+  const out = process.env.WHY_TRACE_OUT;
+  if (!out) return;
+  const file = (expect.getState().testPath || "unknown").split(/[\\/]/).slice(-1)[0];
+  let all = {};
+  try {
+    all = JSON.parse(mockFs.readFileSync(out, "utf8"));
+  } catch {}
+  all[`${file}::all`] = mockCalls;
+  mockFs.writeFileSync(out, JSON.stringify(all));
+});

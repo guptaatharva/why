@@ -1,0 +1,57 @@
+// Injected by `why upgrade` (Vitest setup file): records every call from the project into one package,
+// so the same guard run under the old and the new version can be diffed to find the API that changed.
+import { afterAll, expect, vi } from "vitest";
+import fs from "node:fs";
+
+const PKG = "__WHY_PKG__"; // substituted by why upgrade: vi.mock is hoisted, so it needs a literal
+const OUT = process.env.WHY_TRACE_OUT ?? "";
+const calls: { fn: string; args: Record<string, string>; ret: string }[] = [];
+
+const show = (v: unknown): string => {
+  let s: string;
+  try {
+    s = v instanceof Date ? `Date(${v.toISOString()})` : typeof v === "function" ? `[Function ${v.name}]`
+      : v === undefined ? "undefined" : JSON.stringify(v) ?? String(v);
+  } catch {
+    s = String(v);
+  }
+  return s.length > 300 ? s.slice(0, 297) + "..." : s;
+};
+
+const wrap = (name: string, fn: (...a: unknown[]) => unknown) =>
+  function (this: unknown, ...args: unknown[]) {
+    const rec = { fn: `${PKG}.${name}`, args: Object.fromEntries(args.map((a, i) => [`arg${i}`, show(a)])), ret: "" };
+    const ret = fn.apply(this, args);
+    if (ret && typeof (ret as Promise<unknown>).then === "function") {
+      return (ret as Promise<unknown>).then((v) => {
+        rec.ret = show(v);
+        if (calls.length < 500) calls.push(rec);
+        return v;
+      });
+    }
+    rec.ret = show(ret);
+    if (calls.length < 500) calls.push(rec);
+    return ret;
+  };
+
+const wrapAll = (mod: Record<string, unknown>, prefix = "") => {
+  const out: Record<string, unknown> = { ...mod };
+  for (const [k, v] of Object.entries(mod)) {
+    if (typeof v === "function" && !/^[A-Z]/.test(k)) out[k] = wrap(prefix + k, v as (...a: unknown[]) => unknown);
+    else if (k === "default" && v && typeof v === "object") out[k] = wrapAll(v as Record<string, unknown>, "");
+  }
+  return out;
+};
+
+vi.mock("__WHY_PKG__", async (importOriginal) => wrapAll((await importOriginal()) as Record<string, unknown>));
+
+afterAll(() => {
+  if (!OUT) return;
+  const file = (expect.getState().testPath ?? "unknown").split(/[\\/]/).slice(-1)[0];
+  let all: Record<string, unknown[]> = {};
+  try {
+    all = JSON.parse(fs.readFileSync(OUT, "utf8"));
+  } catch {}
+  all[`${file}::all`] = calls;
+  fs.writeFileSync(OUT, JSON.stringify(all));
+});

@@ -1,0 +1,29 @@
+name: Why check
+description: Run every active Why guard on this change. Guards come from the base branch, code from the PR.
+branding:
+  icon: shield
+  color: green
+inputs:
+  base:
+    description: Trusted ref to take guards and decisions from (defaults to the PR base branch)
+    required: false
+  version:
+    description: why-guard version or git URL to install
+    required: false
+    default: git+https://github.com/guptaatharva/why.git
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v5
+    - shell: bash
+      run: uv tool install "${{ inputs.version }}"
+    - shell: bash
+      env:
+        BASE: ${{ inputs.base || github.base_ref && format('origin/{0}', github.base_ref) || '' }}
+      run: |
+        git fetch --no-tags --depth=200 origin "+refs/heads/*:refs/remotes/origin/*" || true
+        if [ -n "$BASE" ]; then
+          why check --ref HEAD --base "$BASE" --context pr --no-transitions
+        else
+          why check --no-transitions
+        fi

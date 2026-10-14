@@ -1,0 +1,11 @@
+{
+  "query": "Fernwave SMS API rate limit requests per minute",
+  "answer": "Fernwave lowered its default SMS API rate limit to 60 requests per minute for standard accounts in its September 2026 API update; 100 requests per minute now requires the Business tier.",
+  "results": [
+    {"title": "Fernwave API changelog: September 2026", "url": "https://docs.fernwave.example/changelog/2026-09",
+     "content": "Standard accounts are now limited to 60 requests per minute. Keys that exceed the limit are suspended for 24 hours."},
+    {"title": "Fernwave rate limits", "url": "https://docs.fernwave.example/limits",
+     "content": "Standard: 60 requests per minute. Business: 100 requests per minute."}
+  ],
+  "_note": "Recorded fixture for the Why demo. Fernwave is a fictional vendor."
+}

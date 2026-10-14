@@ -1,0 +1,12 @@
+[project]
+name = "chronokit"
+version = "2.0.0"
+description = "Fictional date-parsing library used by the Why demo."
+requires-python = ">=3.9"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["chronokit"]
