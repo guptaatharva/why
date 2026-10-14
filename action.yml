@@ -23,7 +23,13 @@ runs:
       run: |
         git fetch --no-tags --depth=200 origin "+refs/heads/*:refs/remotes/origin/*" || true
         if [ -n "$BASE" ]; then
-          why check --ref HEAD --base "$BASE" --context pr --no-transitions
+          status=0
+          why check --ref HEAD --base "$BASE" --context pr --no-transitions || status=$?
+          # Dependency bumps in this PR (Renovate, Dependabot, agents): run guards before and after.
+          # Run from a worktree of the trusted base so the PR cannot edit the guards that judge it.
+          git worktree add --quiet --detach "$RUNNER_TEMP/why-base" "$BASE"
+          why -C "$RUNNER_TEMP/why-base" upgrade --base "$BASE" --head "$(git rev-parse HEAD)" || status=$?
+          exit $status
         else
           why check --no-transitions
         fi

@@ -1,1666 +1,1189 @@
 {
-  "repo": {
-    "id": "local",
-    "name": "larkspur-storefront",
-    "github": "larkspur/storefront",
-    "head": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2"
+ "repo": {
+  "id": "local",
+  "name": "larkspur",
+  "github": null,
+  "head": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5"
+ },
+ "generated_at": "2026-10-14T14:22:05+00:00",
+ "counts": {
+  "proposed": 1,
+  "active": 4,
+  "violated": 0,
+  "superseded": 0,
+  "retired": 0
+ },
+ "decisions": [
+  {
+   "id": "D-0001",
+   "title": "`parse_date()` must always return UTC",
+   "rule": "`parse_date('2026-03-01T10:00:00+05:30')` must always return UTC",
+   "reason": "because order timestamps are compared across regions and stored without offsets",
+   "status": "active",
+   "kind": "returns",
+   "params": {
+    "target": "larkspur.dates:parse_date",
+    "call": "parse_date('2026-03-01T10:00:00+05:30')",
+    "predicate": "result.tzinfo is not None and result.utcoffset().total_seconds() == 0"
+   },
+   "scope": {
+    "files": [
+     "larkspur/dates.py"
+    ],
+    "symbols": [
+     "larkspur.dates:parse_date"
+    ]
+   },
+   "source": {
+    "type": "commit",
+    "ref": "d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+    "quote": "`parse_date('2026-03-01T10:00:00+05:30')` must always return UTC because order timestamps are compared across regions and stored without offsets.",
+    "link": "commit:d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+    "author": "Dev Raman",
+    "date": "2026-09-10T14:21:12Z"
+   },
+   "confidence": 0.9,
+   "guard": {
+    "path": "why_guards/test_d0001_parse_date_must_always_return_utc.py",
+    "language": "python",
+    "framework": "pytest",
+    "generated_by": "template",
+    "flaky": false,
+    "stability_runs": 3
+   },
+   "approvals": [
+    {
+     "by": "Atharva Gupta",
+     "at": "2026-10-14T14:21:12+00:00"
+    }
+   ],
+   "created_at": "2026-10-14T14:21:12+00:00",
+   "updated_at": "2026-10-14T14:21:13+00:00",
+   "last_result": "pass",
+   "last_context": "local",
+   "last_evidence_at": "2026-10-14T14:21:23+00:00",
+   "evidence_count": 8
   },
-  "generated_at": "2026-10-14T09:13:00+00:00",
-  "counts": {
-    "proposed": 2,
-    "active": 4,
-    "violated": 1,
-    "superseded": 1,
-    "retired": 1
+  {
+   "id": "D-0002",
+   "title": "Never retry `charge()` on a timeout",
+   "rule": "Never retry `charge()` on a timeout",
+   "reason": "the gateway double-bills on retry, because the first request may already have captured the payment",
+   "status": "active",
+   "kind": "call_count",
+   "params": {
+    "target": "larkspur.payments.gateway:charge",
+    "entry": "larkspur.checkout:place_order",
+    "raise": "TimeoutError",
+    "max_calls": 1
+   },
+   "scope": {
+    "files": [
+     "larkspur/checkout.py",
+     "larkspur/payments/gateway.py"
+    ],
+    "symbols": [
+     "larkspur.payments.gateway:charge",
+     "larkspur.checkout:place_order"
+    ]
+   },
+   "source": {
+    "type": "commit",
+    "ref": "261ad2b90edab0cdcb50548ee432751b07797d32",
+    "quote": "Never retry `charge()` on a timeout: the gateway double-bills on retry, because the first request may already have captured the payment.",
+    "link": "commit:261ad2b90edab0cdcb50548ee432751b07797d32",
+    "author": "agent: checkout-session",
+    "date": "2026-09-03T14:21:12Z"
+   },
+   "confidence": 0.9,
+   "guard": {
+    "path": "why_guards/test_d0002_never_retry_charge_on_a_timeout.py",
+    "language": "python",
+    "framework": "pytest",
+    "generated_by": "template",
+    "flaky": false,
+    "stability_runs": 3
+   },
+   "approvals": [
+    {
+     "by": "Atharva Gupta",
+     "at": "2026-10-14T14:21:13+00:00"
+    }
+   ],
+   "created_at": "2026-10-14T14:21:12+00:00",
+   "updated_at": "2026-10-14T14:21:13+00:00",
+   "last_result": "pass",
+   "last_context": "local",
+   "last_evidence_at": "2026-10-14T14:21:23+00:00",
+   "evidence_count": 7
   },
-  "decisions": [
+  {
+   "id": "D-0003",
+   "title": "Don't call `print()` in larkspur/",
+   "rule": "Don't call `print()` in larkspur/",
+   "reason": "everything goes through the logger so card tokens are scrubbed before logs leave the box",
+   "status": "active",
+   "kind": "forbid_pattern",
+   "params": {
+    "pattern": "\\bprint\\s*\\(",
+    "paths": [
+     "larkspur/"
+    ],
+    "glob": "*.py"
+   },
+   "scope": {
+    "files": [],
+    "symbols": []
+   },
+   "source": {
+    "type": "commit",
+    "ref": "2887e040bf408cb4a6918285b0a57250b52a4f50",
+    "quote": "Don't call `print()` in larkspur/: everything goes through the logger so card tokens are scrubbed before logs leave the box.",
+    "link": "commit:2887e040bf408cb4a6918285b0a57250b52a4f50",
+    "author": "Maya Okafor",
+    "date": "2026-09-25T14:21:12Z"
+   },
+   "confidence": 0.75,
+   "guard": {
+    "path": "why_guards/test_d0003_don_t_call_print_in_larkspur.py",
+    "language": "python",
+    "framework": "pytest",
+    "generated_by": "template",
+    "flaky": false,
+    "stability_runs": 3
+   },
+   "approvals": [
     {
-      "id": "D-0001",
-      "title": "Never retry `charge()`",
-      "rule": "Checkout calls payments.gateway.charge() at most once per order, even when it raises. Retries happen only through the reconciliation job.",
-      "reason": "the gateway double-bills on retry",
-      "status": "violated",
-      "kind": "call_count",
-      "params": {
-        "target": "larkspur.payments.gateway:charge",
-        "entry": "larkspur.checkout:place_order",
-        "max_calls": 1,
-        "raise": "TimeoutError"
-      },
-      "scope": {
-        "files": [
-          "larkspur/checkout.py",
-          "larkspur/payments/gateway.py"
-        ],
-        "symbols": [
-          "larkspur/checkout.py:place_order",
-          "larkspur/payments/gateway.py:charge"
-        ]
-      },
-      "source": {
-        "type": "pr_comment",
-        "ref": "#41",
-        "quote": "Please don't wrap charge() in a retry. The gateway doesn't dedupe and we refunded 37 customers last time a timeout got retried.",
-        "link": "https://github.com/larkspur/storefront/pull/41#discussion_r1182044",
-        "author": "maya-okafor",
-        "date": "2026-06-18T14:22:09+00:00"
-      },
-      "confidence": 0.92,
-      "assumption": {
-        "claim": "The payment gateway does not deduplicate repeated charge requests",
-        "query": "payment gateway idempotency key charge API",
-        "verdict": "unclear",
-        "checked_at": "2026-10-13T07:30:09+00:00",
-        "explanation": "The gateway's docs describe idempotency keys for refunds, but say nothing about charges. Nothing found confirms that retrying a charge is now safe, so the decision stands.",
-        "urls": [
-          "https://docs.paygate.example/refunds#idempotency",
-          "https://docs.paygate.example/charges"
-        ]
-      },
-      "guard": {
-        "path": "why_guards/test_d0001_never_retry_charge.py",
-        "language": "python",
-        "framework": "pytest",
-        "generated_by": "template",
-        "flaky": false,
-        "stability_runs": 5
-      },
-      "created_at": "2026-10-02T10:14:03+00:00",
-      "updated_at": "2026-10-14T09:12:41+00:00",
-      "last_result": "fail",
-      "last_context": "pr",
-      "last_evidence_at": "2026-10-14T09:12:40+00:00",
-      "evidence_count": 11
-    },
-    {
-      "id": "D-0002",
-      "title": "`parse_date()` always returns UTC",
-      "rule": "larkspur.util.dates.parse_date() returns a timezone-aware datetime in UTC for every input, including strings with an offset.",
-      "reason": "order cut-off times and shipping SLAs are compared in UTC; a naive local time silently shifts deliveries by hours",
-      "status": "active",
-      "kind": "returns",
-      "params": {
-        "target": "larkspur.util.dates:parse_date",
-        "call": "parse_date('2026-03-01T10:00:00+05:30')",
-        "predicate": "result.tzinfo is not None and result.utcoffset() == datetime.timedelta(0)"
-      },
-      "scope": {
-        "files": [
-          "larkspur/util/dates.py"
-        ],
-        "symbols": [
-          "larkspur/util/dates.py:parse_date"
-        ]
-      },
-      "source": {
-        "type": "commit",
-        "ref": "c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5",
-        "quote": "fix: normalise parse_date to UTC. Bangalore orders were missing the 6pm cut-off because we compared local times.",
-        "link": "https://github.com/larkspur/storefront/commit/c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5",
-        "author": "devin-park",
-        "date": "2026-05-07T08:41:55+00:00"
-      },
-      "confidence": 0.88,
-      "guard": {
-        "path": "why_guards/test_d0002_parse_date_always_returns_utc.py",
-        "language": "python",
-        "framework": "pytest",
-        "generated_by": "template",
-        "flaky": false,
-        "stability_runs": 5
-      },
-      "created_at": "2026-10-02T10:14:03+00:00",
-      "updated_at": "2026-10-13T16:05:12+00:00",
-      "last_result": "pass",
-      "last_context": "pr",
-      "last_evidence_at": "2026-10-14T09:12:40+00:00",
-      "evidence_count": 11
-    },
-    {
-      "id": "D-0003",
-      "title": "Throttle SMS sends below Fernwave's rate limit",
-      "rule": "notify.sms.send_batch() sends at most 90 messages per minute per API key.",
-      "reason": "Fernwave drops, rather than queues, requests over its limit, so order-shipped texts silently vanish",
-      "status": "active",
-      "kind": "custom",
-      "params": {},
-      "scope": {
-        "files": [
-          "larkspur/notify/sms.py"
-        ],
-        "symbols": [
-          "larkspur/notify/sms.py:send_batch",
-          "larkspur/notify/sms.py:RateLimiter"
-        ]
-      },
-      "source": {
-        "type": "agent_log",
-        "ref": "session 7f2c19",
-        "quote": "Fernwave allows 100 requests/minute, so I set the limiter to 90/min to leave headroom for retries.",
-        "link": "",
-        "author": "coding agent",
-        "date": "2026-07-22T11:03:40+00:00"
-      },
-      "confidence": 0.74,
-      "assumption": {
-        "claim": "Fernwave allows 100 requests per minute per API key",
-        "query": "Fernwave SMS API rate limit requests per minute",
-        "verdict": "broken",
-        "checked_at": "2026-10-13T07:30:12+00:00",
-        "explanation": "Fernwave's current API docs list 60 requests/minute on the Standard plan since its 1 September pricing change. The limiter's 90/min ceiling is now above the vendor limit, so bursts will be dropped.",
-        "urls": [
-          "https://docs.fernwave.example/api/rate-limits",
-          "https://fernwave.example/changelog/2026-09-pricing",
-          "https://community.fernwave.example/t/429s-after-plan-change/812"
-        ]
-      },
-      "guard": {
-        "path": "why_guards/test_d0003_throttle_sms_sends_below_fernwave_s.py",
-        "language": "python",
-        "framework": "pytest",
-        "generated_by": "nemotron-super",
-        "flaky": false,
-        "stability_runs": 5
-      },
-      "created_at": "2026-10-02T10:14:03+00:00",
-      "updated_at": "2026-10-13T07:30:12+00:00",
-      "last_result": "pass",
-      "last_context": "pr",
-      "last_evidence_at": "2026-10-14T09:12:40+00:00",
-      "evidence_count": 11
-    },
-    {
-      "id": "D-0004",
-      "title": "Money is integer cents, never floats",
-      "rule": "No float() or float literals in price, tax or discount arithmetic under larkspur/pricing/.",
-      "reason": "float rounding produced 1-cent mismatches between the cart and the invoice, which the tax export rejects",
-      "status": "active",
-      "kind": "forbid_pattern",
-      "params": {
-        "pattern": "float\\(|\\b\\d+\\.\\d+\\b",
-        "paths": [
-          "larkspur/pricing"
-        ],
-        "glob": "*.py"
-      },
-      "scope": {
-        "files": [
-          "larkspur/pricing/"
-        ],
-        "symbols": []
-      },
-      "source": {
-        "type": "pr_body",
-        "ref": "#27",
-        "quote": "Moves all money to integer cents. Floats caused the invoice/cart penny drift in #19.",
-        "link": "https://github.com/larkspur/storefront/pull/27",
-        "author": "maya-okafor",
-        "date": "2026-04-11T09:10:00+00:00"
-      },
-      "confidence": 0.81,
-      "guard": {
-        "path": "why_guards/test_d0004_money_is_integer_cents_never_floats.py",
-        "language": "python",
-        "framework": "pytest",
-        "generated_by": "template",
-        "flaky": false,
-        "stability_runs": 5
-      },
-      "created_at": "2026-10-02T10:14:03+00:00",
-      "updated_at": "2026-10-03T12:00:41+00:00",
-      "last_result": "pass",
-      "last_context": "pr",
-      "last_evidence_at": "2026-10-14T09:12:40+00:00",
-      "evidence_count": 10
-    },
-    {
-      "id": "D-0005",
-      "title": "Send the order email only after payment capture",
-      "rule": "orders.confirm() enqueues the confirmation email only after payments.capture() succeeds.",
-      "reason": "customers received 'order confirmed' emails for cards that were later declined",
-      "status": "proposed",
-      "kind": "custom",
-      "params": {},
-      "scope": {
-        "files": [
-          "larkspur/orders.py"
-        ],
-        "symbols": [
-          "larkspur/orders.py:confirm"
-        ]
-      },
-      "source": {
-        "type": "entire_checkpoint",
-        "ref": "ckpt 2026-09-30/3",
-        "quote": "Moved send_confirmation() after capture(); previously a declined card still got the confirmation email.",
-        "link": "",
-        "author": "coding agent",
-        "date": "2026-09-30T15:44:02+00:00"
-      },
-      "confidence": 0.67,
-      "created_at": "2026-10-14T08:58:10+00:00",
-      "updated_at": "2026-10-14T08:58:10+00:00",
-      "last_result": null,
-      "last_context": null,
-      "last_evidence_at": null,
-      "evidence_count": 0
-    },
-    {
-      "id": "D-0006",
-      "title": "Cart totals are computed server-side",
-      "rule": "The checkout API ignores any client-supplied total and recomputes it from line items.",
-      "reason": "a modified client once submitted a $0.01 total for a $140 order",
-      "status": "proposed",
-      "kind": "custom",
-      "params": {},
-      "scope": {
-        "files": [
-          "larkspur/api/checkout.py"
-        ],
-        "symbols": [
-          "larkspur/api/checkout.py:submit"
-        ]
-      },
-      "source": {
-        "type": "pr_comment",
-        "ref": "#33",
-        "quote": "Never trust the total from the browser. Recompute from SKUs every time.",
-        "link": "https://github.com/larkspur/storefront/pull/33#issuecomment-2210931",
-        "author": "sam-reyes",
-        "date": "2026-05-02T17:20:11+00:00"
-      },
-      "confidence": 0.79,
-      "created_at": "2026-10-14T08:58:10+00:00",
-      "updated_at": "2026-10-14T08:58:10+00:00",
-      "last_result": null,
-      "last_context": null,
-      "last_evidence_at": null,
-      "evidence_count": 0
-    },
-    {
-      "id": "D-0007",
-      "title": "Read stock from the v1 inventory endpoint",
-      "rule": "Inventory lookups go through inventory.v1.get_stock().",
-      "reason": "v2 returned stale counts during the warehouse migration",
-      "status": "superseded",
-      "kind": "custom",
-      "params": {},
-      "superseded_by": "D-0008",
-      "scope": {
-        "files": [
-          "larkspur/inventory.py"
-        ],
-        "symbols": [
-          "larkspur/inventory.py:stock_for"
-        ]
-      },
-      "source": {
-        "type": "commit",
-        "ref": "e2a4c6e8f0b2d4f6a8c0e2a4c6e8f0b2d4f6a8c0",
-        "quote": "revert to inventory v1 until the warehouse migration settles",
-        "link": "https://github.com/larkspur/storefront/commit/e2a4c6e8f0b2d4f6a8c0e2a4c6e8f0b2d4f6a8c0",
-        "author": "devin-park",
-        "date": "2026-03-20T10:00:00+00:00"
-      },
-      "confidence": 0.7,
-      "guard": {
-        "path": "why_guards/test_d0007_read_stock_from_the_v1_inventory_endpo.py",
-        "language": "python",
-        "framework": "pytest",
-        "generated_by": "nemotron-super",
-        "flaky": false,
-        "stability_runs": 5
-      },
-      "created_at": "2026-10-02T10:14:03+00:00",
-      "updated_at": "2026-10-09T13:22:00+00:00",
-      "last_result": "pass",
-      "last_context": "dashboard",
-      "last_evidence_at": "2026-10-08T11:02:55+00:00",
-      "evidence_count": 7
-    },
-    {
-      "id": "D-0008",
-      "title": "Read stock from inventory v2 with a 30s cache",
-      "rule": "Inventory lookups go through inventory.v2.availability() behind a cache of at most 30 seconds.",
-      "reason": "the warehouse migration finished and v1 is being shut down; 30s keeps oversells under 0.1%",
-      "status": "active",
-      "kind": "custom",
-      "params": {},
-      "supersedes": "D-0007",
-      "scope": {
-        "files": [
-          "larkspur/inventory.py"
-        ],
-        "symbols": [
-          "larkspur/inventory.py:stock_for"
-        ]
-      },
-      "source": {
-        "type": "manual",
-        "ref": "",
-        "quote": "",
-        "link": "",
-        "author": "sam-reyes",
-        "date": "2026-10-09T13:22:00+00:00"
-      },
-      "confidence": 1.0,
-      "assumption": {
-        "claim": "Inventory v2 availability is at most 30 seconds stale",
-        "query": "inventory v2 availability freshness",
-        "verdict": "holds",
-        "checked_at": "2026-10-13T07:30:15+00:00",
-        "explanation": "The internal platform docs state availability is recomputed every 10 seconds from warehouse events, well inside the 30-second budget.",
-        "urls": [
-          "https://platform.larkspur.example/inventory/v2#freshness"
-        ]
-      },
-      "guard": {
-        "path": "why_guards/test_d0008_read_stock_from_inventory_v2_with_a_30.py",
-        "language": "python",
-        "framework": "pytest",
-        "generated_by": "nemotron-super",
-        "flaky": false,
-        "stability_runs": 5
-      },
-      "created_at": "2026-10-09T13:22:00+00:00",
-      "updated_at": "2026-10-09T13:24:31+00:00",
-      "last_result": "pass",
-      "last_context": "pr",
-      "last_evidence_at": "2026-10-14T09:12:40+00:00",
-      "evidence_count": 9
-    },
-    {
-      "id": "D-0009",
-      "title": "Gift cards stay behind the `giftcards_beta` flag",
-      "rule": "Gift-card checkout is only reachable when the giftcards_beta flag is on.",
-      "reason": "the ledger for gift-card balances was not yet audited",
-      "status": "retired",
-      "kind": "forbid_pattern",
-      "params": {
-        "pattern": "giftcard_checkout\\(",
-        "paths": [
-          "larkspur/api"
-        ]
-      },
-      "scope": {
-        "files": [
-          "larkspur/api/"
-        ],
-        "symbols": []
-      },
-      "source": {
-        "type": "pr_body",
-        "ref": "#12",
-        "quote": "Ship behind giftcards_beta until finance signs off on the ledger.",
-        "link": "https://github.com/larkspur/storefront/pull/12",
-        "author": "maya-okafor",
-        "date": "2026-02-14T10:00:00+00:00"
-      },
-      "confidence": 0.6,
-      "created_at": "2026-10-02T10:14:03+00:00",
-      "updated_at": "2026-10-06T09:40:00+00:00",
-      "last_result": null,
-      "last_context": null,
-      "last_evidence_at": null,
-      "evidence_count": 0
+     "by": "Atharva Gupta",
+     "at": "2026-10-14T14:21:13+00:00"
     }
-  ],
-  "evidence": [
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab1",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:20:10+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab1",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:20:13+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab1",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:20:16+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab1",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:20:19+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab1",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:20:22+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab2",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:21:10+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab2",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:21:13+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab2",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:21:16+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab2",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:21:19+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab2",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:21:22+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab4",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:22:10+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab4",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:22:13+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab4",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:22:16+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab4",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:22:19+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab4",
-      "log": "",
-      "duration_s": 0.3,
-      "detail": {},
-      "timestamp": "2026-10-02T10:22:22+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab3",
-      "log": "",
-      "duration_s": 1.1,
-      "detail": {},
-      "timestamp": "2026-10-02T10:24:10+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab3",
-      "log": "",
-      "duration_s": 1.1,
-      "detail": {},
-      "timestamp": "2026-10-02T10:24:14+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab3",
-      "log": "",
-      "duration_s": 1.1,
-      "detail": {},
-      "timestamp": "2026-10-02T10:24:18+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab3",
-      "log": "",
-      "duration_s": 1.1,
-      "detail": {},
-      "timestamp": "2026-10-02T10:24:22+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab3",
-      "log": "",
-      "duration_s": 1.1,
-      "detail": {},
-      "timestamp": "2026-10-02T10:24:26+00:00"
-    },
-    {
-      "decision_id": "D-0007",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab7",
-      "log": "",
-      "duration_s": 0.9,
-      "detail": {},
-      "timestamp": "2026-10-02T10:26:10+00:00"
-    },
-    {
-      "decision_id": "D-0007",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab7",
-      "log": "",
-      "duration_s": 0.9,
-      "detail": {},
-      "timestamp": "2026-10-02T10:26:14+00:00"
-    },
-    {
-      "decision_id": "D-0007",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab7",
-      "log": "",
-      "duration_s": 0.9,
-      "detail": {},
-      "timestamp": "2026-10-02T10:26:18+00:00"
-    },
-    {
-      "decision_id": "D-0007",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab7",
-      "log": "",
-      "duration_s": 0.9,
-      "detail": {},
-      "timestamp": "2026-10-02T10:26:22+00:00"
-    },
-    {
-      "decision_id": "D-0007",
-      "result": "pass",
-      "context": "stability",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "stab7",
-      "log": "",
-      "duration_s": 0.9,
-      "detail": {},
-      "timestamp": "2026-10-02T10:26:26+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "local",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "90ad3c5e7f12",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-03T12:00:41+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "local",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "90ad3c5e7f12",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-03T12:00:41+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "local",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "90ad3c5e7f12",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-03T12:00:41+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "local",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "90ad3c5e7f12",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-03T12:00:41+00:00"
-    },
-    {
-      "decision_id": "D-0007",
-      "result": "pass",
-      "context": "local",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "run_id": "90ad3c5e7f12",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-03T12:00:41+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "dashboard",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "1f6e4b8c2a07",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-08T11:02:55+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "dashboard",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "1f6e4b8c2a07",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-08T11:02:55+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "dashboard",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "1f6e4b8c2a07",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-08T11:02:55+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "dashboard",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "1f6e4b8c2a07",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-08T11:02:55+00:00"
-    },
-    {
-      "decision_id": "D-0007",
-      "result": "pass",
-      "context": "dashboard",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "1f6e4b8c2a07",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-08T11:02:55+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "stability",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "stab8",
-      "log": "",
-      "duration_s": 0.8,
-      "detail": {},
-      "timestamp": "2026-10-09T13:24:10+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "stability",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "stab8",
-      "log": "",
-      "duration_s": 0.8,
-      "detail": {},
-      "timestamp": "2026-10-09T13:24:14+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "stability",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "stab8",
-      "log": "",
-      "duration_s": 0.8,
-      "detail": {},
-      "timestamp": "2026-10-09T13:24:18+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "stability",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "stab8",
-      "log": "",
-      "duration_s": 0.8,
-      "detail": {},
-      "timestamp": "2026-10-09T13:24:22+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "stability",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "stab8",
-      "log": "",
-      "duration_s": 0.8,
-      "detail": {},
-      "timestamp": "2026-10-09T13:24:26+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "pr",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "c58a21f0e9d3",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 56
-      },
-      "timestamp": "2026-10-12T15:18:27+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "pr",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "c58a21f0e9d3",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 56
-      },
-      "timestamp": "2026-10-12T15:18:27+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "pr",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "c58a21f0e9d3",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 56
-      },
-      "timestamp": "2026-10-12T15:18:27+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "pr",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "c58a21f0e9d3",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 56
-      },
-      "timestamp": "2026-10-12T15:18:27+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "pr",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "run_id": "c58a21f0e9d3",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 56
-      },
-      "timestamp": "2026-10-12T15:18:27+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "skipped",
-      "context": "assumption",
-      "commit": "",
-      "run_id": "",
-      "log": "The gateway's docs describe idempotency keys for refunds, but say nothing about charges. Nothing found confirms that retrying a charge is now safe, so the decision stands.",
-      "duration_s": 0,
-      "detail": {},
-      "timestamp": "2026-10-13T07:30:09+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "fail",
-      "context": "assumption",
-      "commit": "",
-      "run_id": "",
-      "log": "Fernwave's current API docs list 60 requests/minute on the Standard plan since its 1 September pricing change. The limiter's 90/min ceiling is now above the vendor limit, so bursts will be dropped.",
-      "duration_s": 0,
-      "detail": {
-        "claim": "Fernwave allows 100 requests per minute per API key",
-        "urls": [
-          "https://docs.fernwave.example/api/rate-limits",
-          "https://fernwave.example/changelog/2026-09-pricing",
-          "https://community.fernwave.example/t/429s-after-plan-change/812"
-        ]
-      },
-      "timestamp": "2026-10-13T07:30:12+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "assumption",
-      "commit": "",
-      "run_id": "",
-      "log": "The internal platform docs state availability is recomputed every 10 seconds from warehouse events, well inside the 30-second budget.",
-      "duration_s": 0,
-      "detail": {},
-      "timestamp": "2026-10-13T07:30:15+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "fail",
-      "context": "upgrade",
-      "commit": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2",
-      "run_id": "5d2e8f1a0b93",
-      "log": "why_guards/test_d0002_parse_date_always_returns_utc.py::test_d0002_parse_date_always_returns_utc FAILED\n\n    def test_d0002_parse_date_always_returns_utc():\n        result = parse_date('2026-03-01T10:00:00+05:30')\n>       assert result.tzinfo is not None and result.utcoffset() == datetime.timedelta(0), (\nE       AssertionError: parse_date('2026-03-01T10:00:00+05:30') returned datetime.datetime(2026, 3, 1, 10, 0). Violates D-0002 (`parse_date()` always returns UTC).\nE       assert (None is not None)\nE        +  where None = datetime.datetime(2026, 3, 1, 10, 0).tzinfo\n\nwhy_guards/test_d0002_parse_date_always_returns_utc.py:16: AssertionError",
-      "duration_s": 0.6,
-      "detail": {
-        "package": "chronokit",
-        "from": "1.4.0",
-        "to": "2.0.0",
-        "root_cause": {
-          "api": "chronokit.parse",
-          "args": [
-            "'2026-03-01T10:00:00+05:30'"
-          ],
-          "before": "datetime.datetime(2026, 3, 1, 4, 30, tzinfo=datetime.timezone.utc)",
-          "after": "datetime.datetime(2026, 3, 1, 10, 0)"
-        }
-      },
-      "timestamp": "2026-10-13T16:05:12+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "pass",
-      "context": "local",
-      "commit": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2",
-      "run_id": "7b0d93e1fa45",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-14T08:40:02+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "local",
-      "commit": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2",
-      "run_id": "7b0d93e1fa45",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-14T08:40:02+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "local",
-      "commit": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2",
-      "run_id": "7b0d93e1fa45",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-14T08:40:02+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "local",
-      "commit": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2",
-      "run_id": "7b0d93e1fa45",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-14T08:40:02+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "local",
-      "commit": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2",
-      "run_id": "7b0d93e1fa45",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {},
-      "timestamp": "2026-10-14T08:40:02+00:00"
-    },
-    {
-      "decision_id": "D-0001",
-      "result": "fail",
-      "context": "pr",
-      "commit": "a3f9e0c4d71b2e85f6a0c9d3e7b1f4a2c8d6e0b5",
-      "run_id": "e41c0a9b7d22",
-      "log": "why_guards/test_d0001_never_retry_charge.py::test_d0001_never_retry_charge FAILED\n\n    def test_d0001_never_retry_charge():\n        ...\n>       assert len(calls) <= MAX_CALLS, (\nE       AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0001 (Never retry `charge()`). Reason: the gateway double-bills on retry\nE       assert 3 <= 1\nE        +  where 3 = len([((Order(id=1001, total_cents=4200),), {}), ((Order(id=1001, total_cents=4200),), {}), ((Order(id=1001, total_cents=4200),), {})])\n\nwhy_guards/test_d0001_never_retry_charge.py:38: AssertionError\n  larkspur/checkout.py:57  place_order -> @with_retries(attempts=3, backoff=0.5)",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 58
-      },
-      "timestamp": "2026-10-14T09:12:40+00:00"
-    },
-    {
-      "decision_id": "D-0002",
-      "result": "pass",
-      "context": "pr",
-      "commit": "a3f9e0c4d71b2e85f6a0c9d3e7b1f4a2c8d6e0b5",
-      "run_id": "e41c0a9b7d22",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 58
-      },
-      "timestamp": "2026-10-14T09:12:40+00:00"
-    },
-    {
-      "decision_id": "D-0003",
-      "result": "pass",
-      "context": "pr",
-      "commit": "a3f9e0c4d71b2e85f6a0c9d3e7b1f4a2c8d6e0b5",
-      "run_id": "e41c0a9b7d22",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 58
-      },
-      "timestamp": "2026-10-14T09:12:40+00:00"
-    },
-    {
-      "decision_id": "D-0004",
-      "result": "pass",
-      "context": "pr",
-      "commit": "a3f9e0c4d71b2e85f6a0c9d3e7b1f4a2c8d6e0b5",
-      "run_id": "e41c0a9b7d22",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 58
-      },
-      "timestamp": "2026-10-14T09:12:40+00:00"
-    },
-    {
-      "decision_id": "D-0008",
-      "result": "pass",
-      "context": "pr",
-      "commit": "a3f9e0c4d71b2e85f6a0c9d3e7b1f4a2c8d6e0b5",
-      "run_id": "e41c0a9b7d22",
-      "log": "",
-      "duration_s": 1.2,
-      "detail": {
-        "pr": 58
-      },
-      "timestamp": "2026-10-14T09:12:40+00:00"
-    }
-  ],
-  "log": [
-    {
-      "ts": "2026-10-02T10:14:03+00:00",
-      "decision_id": "D-0001",
-      "from": null,
-      "to": "proposed",
-      "actor": "why mine",
-      "note": "created from pr_comment"
-    },
-    {
-      "ts": "2026-10-02T10:14:03+00:00",
-      "decision_id": "D-0002",
-      "from": null,
-      "to": "proposed",
-      "actor": "why mine",
-      "note": "created from commit"
-    },
-    {
-      "ts": "2026-10-02T10:14:03+00:00",
-      "decision_id": "D-0003",
-      "from": null,
-      "to": "proposed",
-      "actor": "why mine",
-      "note": "created from agent_log"
-    },
-    {
-      "ts": "2026-10-02T10:14:03+00:00",
-      "decision_id": "D-0004",
-      "from": null,
-      "to": "proposed",
-      "actor": "why mine",
-      "note": "created from pr_body"
-    },
-    {
-      "ts": "2026-10-02T10:14:03+00:00",
-      "decision_id": "D-0007",
-      "from": null,
-      "to": "proposed",
-      "actor": "why mine",
-      "note": "created from commit"
-    },
-    {
-      "ts": "2026-10-02T10:14:03+00:00",
-      "decision_id": "D-0009",
-      "from": null,
-      "to": "proposed",
-      "actor": "why mine",
-      "note": "created from pr_body"
-    },
-    {
-      "ts": "2026-10-02T10:20:25+00:00",
-      "decision_id": "D-0001",
-      "from": "proposed",
-      "to": "active",
-      "actor": "maya-okafor",
-      "note": "approved; guard stable over 5 runs"
-    },
-    {
-      "ts": "2026-10-02T10:21:25+00:00",
-      "decision_id": "D-0002",
-      "from": "proposed",
-      "to": "active",
-      "actor": "maya-okafor",
-      "note": "approved; guard stable over 5 runs"
-    },
-    {
-      "ts": "2026-10-02T10:22:25+00:00",
-      "decision_id": "D-0004",
-      "from": "proposed",
-      "to": "active",
-      "actor": "maya-okafor",
-      "note": "approved; guard stable over 5 runs"
-    },
-    {
-      "ts": "2026-10-02T10:24:30+00:00",
-      "decision_id": "D-0003",
-      "from": "proposed",
-      "to": "active",
-      "actor": "devin-park",
-      "note": "approved; guard written by Nemotron Super, stable over 5 runs"
-    },
-    {
-      "ts": "2026-10-02T10:26:30+00:00",
-      "decision_id": "D-0007",
-      "from": "proposed",
-      "to": "active",
-      "actor": "devin-park",
-      "note": "approved; guard written by Nemotron Super, stable over 5 runs"
-    },
-    {
-      "ts": "2026-10-06T09:40:00+00:00",
-      "decision_id": "D-0009",
-      "from": "proposed",
-      "to": "retired",
-      "actor": "dashboard",
-      "note": "gift cards shipped to everyone; flag removed"
-    },
-    {
-      "ts": "2026-10-09T13:22:00+00:00",
-      "decision_id": "D-0008",
-      "from": null,
-      "to": "proposed",
-      "actor": "sam-reyes",
-      "note": "created from manual (supersedes D-0007)"
-    },
-    {
-      "ts": "2026-10-09T13:22:00+00:00",
-      "decision_id": "D-0007",
-      "from": "active",
-      "to": "superseded",
-      "actor": "sam-reyes",
-      "note": "superseded by D-0008: warehouse migration finished, v1 shutting down"
-    },
-    {
-      "ts": "2026-10-09T13:24:31+00:00",
-      "decision_id": "D-0008",
-      "from": "proposed",
-      "to": "active",
-      "actor": "sam-reyes",
-      "note": "approved; guard written by Nemotron Super, stable over 5 runs"
-    },
-    {
-      "ts": "2026-10-13T07:30:12+00:00",
-      "decision_id": "D-0003",
-      "from": "active",
-      "to": "active",
-      "actor": "why assume",
-      "note": "assumption broken: Fernwave now allows 60 requests/minute, below the 90/min limiter"
-    },
-    {
-      "ts": "2026-10-14T08:58:10+00:00",
-      "decision_id": "D-0005",
-      "from": null,
-      "to": "proposed",
-      "actor": "why mine",
-      "note": "created from entire_checkpoint"
-    },
-    {
-      "ts": "2026-10-14T08:58:10+00:00",
-      "decision_id": "D-0006",
-      "from": null,
-      "to": "proposed",
-      "actor": "why mine",
-      "note": "created from pr_comment"
-    },
-    {
-      "ts": "2026-10-14T09:12:41+00:00",
-      "decision_id": "D-0001",
-      "from": "active",
-      "to": "violated",
-      "actor": "why check",
-      "note": "guard failed at a3f9e0c4d71b (pr)"
-    }
-  ],
-  "checks": [
-    {
-      "run_id": "e41c0a9b7d22",
-      "context": "pr",
-      "commit": "a3f9e0c4d71b2e85f6a0c9d3e7b1f4a2c8d6e0b5",
-      "items": [
-        {
-          "decision_id": "D-0001",
-          "title": "Never retry `charge()`",
-          "reason": "the gateway double-bills on retry",
-          "result": "fail",
-          "log": "why_guards/test_d0001_never_retry_charge.py::test_d0001_never_retry_charge FAILED\n\n    def test_d0001_never_retry_charge():\n        ...\n>       assert len(calls) <= MAX_CALLS, (\nE       AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0001 (Never retry `charge()`). Reason: the gateway double-bills on retry\nE       assert 3 <= 1\nE        +  where 3 = len([((Order(id=1001, total_cents=4200),), {}), ((Order(id=1001, total_cents=4200),), {}), ((Order(id=1001, total_cents=4200),), {})])\n\nwhy_guards/test_d0001_never_retry_charge.py:38: AssertionError\n  larkspur/checkout.py:57  place_order -> @with_retries(attempts=3, backoff=0.5)",
-          "source_link": "https://github.com/larkspur/storefront/pull/41#discussion_r1182044",
-          "source_ref": "#41"
-        },
-        {
-          "decision_id": "D-0002",
-          "title": "`parse_date()` always returns UTC",
-          "reason": "order cut-off times and shipping SLAs are compared in UTC; a naive local time silently shifts deliveries by hours",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/commit/c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5",
-          "source_ref": "c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5"
-        },
-        {
-          "decision_id": "D-0003",
-          "title": "Throttle SMS sends below Fernwave's rate limit",
-          "reason": "Fernwave drops, rather than queues, requests over its limit, so order-shipped texts silently vanish",
-          "result": "pass",
-          "log": "",
-          "source_link": "",
-          "source_ref": "session 7f2c19"
-        },
-        {
-          "decision_id": "D-0004",
-          "title": "Money is integer cents, never floats",
-          "reason": "float rounding produced 1-cent mismatches between the cart and the invoice, which the tax export rejects",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/27",
-          "source_ref": "#27"
-        },
-        {
-          "decision_id": "D-0008",
-          "title": "Read stock from inventory v2 with a 30s cache",
-          "reason": "the warehouse migration finished and v1 is being shut down; 30s keeps oversells under 0.1%",
-          "result": "pass",
-          "log": "",
-          "source_link": "",
-          "source_ref": ""
-        }
-      ],
-      "duration_s": 6.8,
-      "created_at": "2026-10-14T09:12:40+00:00",
-      "ok": false,
-      "violations": [
-        "D-0001"
-      ],
-      "pr": 58,
-      "pr_url": "https://github.com/larkspur/storefront/pull/58",
-      "head_sha": "a3f9e0c4d71b2e85f6a0c9d3e7b1f4a2c8d6e0b5",
-      "pr_title": "Make checkout resilient to gateway timeouts"
-    },
-    {
-      "run_id": "7b0d93e1fa45",
-      "context": "local",
-      "commit": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2",
-      "items": [
-        {
-          "decision_id": "D-0001",
-          "title": "Never retry `charge()`",
-          "reason": "the gateway double-bills on retry",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/41#discussion_r1182044",
-          "source_ref": "#41"
-        },
-        {
-          "decision_id": "D-0002",
-          "title": "`parse_date()` always returns UTC",
-          "reason": "order cut-off times and shipping SLAs are compared in UTC; a naive local time silently shifts deliveries by hours",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/commit/c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5",
-          "source_ref": "c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5"
-        },
-        {
-          "decision_id": "D-0003",
-          "title": "Throttle SMS sends below Fernwave's rate limit",
-          "reason": "Fernwave drops, rather than queues, requests over its limit, so order-shipped texts silently vanish",
-          "result": "pass",
-          "log": "",
-          "source_link": "",
-          "source_ref": "session 7f2c19"
-        },
-        {
-          "decision_id": "D-0004",
-          "title": "Money is integer cents, never floats",
-          "reason": "float rounding produced 1-cent mismatches between the cart and the invoice, which the tax export rejects",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/27",
-          "source_ref": "#27"
-        },
-        {
-          "decision_id": "D-0008",
-          "title": "Read stock from inventory v2 with a 30s cache",
-          "reason": "the warehouse migration finished and v1 is being shut down; 30s keeps oversells under 0.1%",
-          "result": "pass",
-          "log": "",
-          "source_link": "",
-          "source_ref": ""
-        }
-      ],
-      "duration_s": 5.9,
-      "created_at": "2026-10-14T08:40:02+00:00",
-      "ok": true,
-      "violations": []
-    },
-    {
-      "run_id": "c58a21f0e9d3",
-      "context": "pr",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "items": [
-        {
-          "decision_id": "D-0001",
-          "title": "Never retry `charge()`",
-          "reason": "the gateway double-bills on retry",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/41#discussion_r1182044",
-          "source_ref": "#41"
-        },
-        {
-          "decision_id": "D-0002",
-          "title": "`parse_date()` always returns UTC",
-          "reason": "order cut-off times and shipping SLAs are compared in UTC; a naive local time silently shifts deliveries by hours",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/commit/c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5",
-          "source_ref": "c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5"
-        },
-        {
-          "decision_id": "D-0003",
-          "title": "Throttle SMS sends below Fernwave's rate limit",
-          "reason": "Fernwave drops, rather than queues, requests over its limit, so order-shipped texts silently vanish",
-          "result": "pass",
-          "log": "",
-          "source_link": "",
-          "source_ref": "session 7f2c19"
-        },
-        {
-          "decision_id": "D-0004",
-          "title": "Money is integer cents, never floats",
-          "reason": "float rounding produced 1-cent mismatches between the cart and the invoice, which the tax export rejects",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/27",
-          "source_ref": "#27"
-        },
-        {
-          "decision_id": "D-0008",
-          "title": "Read stock from inventory v2 with a 30s cache",
-          "reason": "the warehouse migration finished and v1 is being shut down; 30s keeps oversells under 0.1%",
-          "result": "pass",
-          "log": "",
-          "source_link": "",
-          "source_ref": ""
-        }
-      ],
-      "duration_s": 6.2,
-      "created_at": "2026-10-12T15:18:27+00:00",
-      "ok": true,
-      "violations": [],
-      "pr": 56,
-      "pr_url": "https://github.com/larkspur/storefront/pull/56",
-      "head_sha": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "pr_title": "Add order notes to the admin view"
-    },
-    {
-      "run_id": "1f6e4b8c2a07",
-      "context": "dashboard",
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "items": [
-        {
-          "decision_id": "D-0001",
-          "title": "Never retry `charge()`",
-          "reason": "the gateway double-bills on retry",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/41#discussion_r1182044",
-          "source_ref": "#41"
-        },
-        {
-          "decision_id": "D-0002",
-          "title": "`parse_date()` always returns UTC",
-          "reason": "order cut-off times and shipping SLAs are compared in UTC; a naive local time silently shifts deliveries by hours",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/commit/c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5",
-          "source_ref": "c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5"
-        },
-        {
-          "decision_id": "D-0003",
-          "title": "Throttle SMS sends below Fernwave's rate limit",
-          "reason": "Fernwave drops, rather than queues, requests over its limit, so order-shipped texts silently vanish",
-          "result": "pass",
-          "log": "",
-          "source_link": "",
-          "source_ref": "session 7f2c19"
-        },
-        {
-          "decision_id": "D-0004",
-          "title": "Money is integer cents, never floats",
-          "reason": "float rounding produced 1-cent mismatches between the cart and the invoice, which the tax export rejects",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/27",
-          "source_ref": "#27"
-        },
-        {
-          "decision_id": "D-0007",
-          "title": "Read stock from the v1 inventory endpoint",
-          "reason": "v2 returned stale counts during the warehouse migration",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/commit/e2a4c6e8f0b2d4f6a8c0e2a4c6e8f0b2d4f6a8c0",
-          "source_ref": "e2a4c6e8f0b2d4f6a8c0e2a4c6e8f0b2d4f6a8c0"
-        }
-      ],
-      "duration_s": 5.4,
-      "created_at": "2026-10-08T11:02:55+00:00",
-      "ok": true,
-      "violations": []
-    },
-    {
-      "run_id": "90ad3c5e7f12",
-      "context": "local",
-      "commit": "b7d02f4a9e1c3b5d7f9a1c3e5b7d9f1a3c5e7b9d",
-      "items": [
-        {
-          "decision_id": "D-0001",
-          "title": "Never retry `charge()`",
-          "reason": "the gateway double-bills on retry",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/41#discussion_r1182044",
-          "source_ref": "#41"
-        },
-        {
-          "decision_id": "D-0002",
-          "title": "`parse_date()` always returns UTC",
-          "reason": "order cut-off times and shipping SLAs are compared in UTC; a naive local time silently shifts deliveries by hours",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/commit/c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5",
-          "source_ref": "c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5"
-        },
-        {
-          "decision_id": "D-0003",
-          "title": "Throttle SMS sends below Fernwave's rate limit",
-          "reason": "Fernwave drops, rather than queues, requests over its limit, so order-shipped texts silently vanish",
-          "result": "pass",
-          "log": "",
-          "source_link": "",
-          "source_ref": "session 7f2c19"
-        },
-        {
-          "decision_id": "D-0004",
-          "title": "Money is integer cents, never floats",
-          "reason": "float rounding produced 1-cent mismatches between the cart and the invoice, which the tax export rejects",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/pull/27",
-          "source_ref": "#27"
-        },
-        {
-          "decision_id": "D-0007",
-          "title": "Read stock from the v1 inventory endpoint",
-          "reason": "v2 returned stale counts during the warehouse migration",
-          "result": "pass",
-          "log": "",
-          "source_link": "https://github.com/larkspur/storefront/commit/e2a4c6e8f0b2d4f6a8c0e2a4c6e8f0b2d4f6a8c0",
-          "source_ref": "e2a4c6e8f0b2d4f6a8c0e2a4c6e8f0b2d4f6a8c0"
-        }
-      ],
-      "duration_s": 5.1,
-      "created_at": "2026-10-03T12:00:41+00:00",
-      "ok": true,
-      "violations": []
-    }
-  ],
-  "upgrades": [
-    {
-      "id": "5d2e8f1a0b93",
-      "package": "chronokit",
-      "from_version": "1.4.0",
-      "to_version": "2.0.0",
-      "verdict": "blocked",
-      "breaks": [
-        {
-          "decision_id": "D-0002",
-          "title": "`parse_date()` always returns UTC",
-          "reason": "order cut-off times and shipping SLAs are compared in UTC; a naive local time silently shifts deliveries by hours",
-          "log": "why_guards/test_d0002_parse_date_always_returns_utc.py::test_d0002_parse_date_always_returns_utc FAILED\n\n    def test_d0002_parse_date_always_returns_utc():\n        result = parse_date('2026-03-01T10:00:00+05:30')\n>       assert result.tzinfo is not None and result.utcoffset() == datetime.timedelta(0), (\nE       AssertionError: parse_date('2026-03-01T10:00:00+05:30') returned datetime.datetime(2026, 3, 1, 10, 0). Violates D-0002 (`parse_date()` always returns UTC).\nE       assert (None is not None)\nE        +  where None = datetime.datetime(2026, 3, 1, 10, 0).tzinfo\n\nwhy_guards/test_d0002_parse_date_always_returns_utc.py:16: AssertionError",
-          "root_cause": {
-            "api": "chronokit.parse",
-            "args": [
-              "'2026-03-01T10:00:00+05:30'"
-            ],
-            "before": "datetime.datetime(2026, 3, 1, 4, 30, tzinfo=datetime.timezone.utc)",
-            "after": "datetime.datetime(2026, 3, 1, 10, 0)",
-            "order": 0,
-            "candidates": [
-              "chronokit.parse"
-            ]
-          },
-          "explanation": "chronokit 2.0.0 changed `chronokit.parse` to return naive local wall-clock time instead of converting offset-aware strings to UTC. The API signature is unchanged, so nothing failed to import, but `parse_date()` now drops the +05:30 offset and returns 10:00 instead of 04:30 UTC. Either pass `tz=chronokit.UTC` at the call site in larkspur/util/dates.py, or pin chronokit<2 until it is adapted."
-        }
-      ],
-      "guards_run": 5,
-      "passed_before": 5,
-      "passed_after": 4,
-      "guarantees": [],
-      "commit": "9f3c2a1e7b4d8c06a5f1e2d3c4b5a69788f0e1d2",
-      "error": "",
-      "created_at": "2026-10-13T16:05:12+00:00"
-    },
-    {
-      "id": "0c7a9e3b51d4",
-      "package": "parcelpost",
-      "from_version": "3.1.2",
-      "to_version": "3.2.0",
-      "verdict": "approved",
-      "breaks": [],
-      "guards_run": 6,
-      "passed_before": 6,
-      "passed_after": 6,
-      "guarantees": [
-        "why_guarantees/parcelpost/test_rates_are_cents.py"
-      ],
-      "commit": "4e81bd29c0a7f3e6d5c4b3a2918f7e6d5c4b3a29",
-      "error": "",
-      "created_at": "2026-10-10T10:41:09+00:00"
-    }
-  ],
-  "merges": [
-    {
-      "id": "3e9b1c0d7a62",
-      "ok": true,
-      "base": "HEAD",
-      "other": "feature/order-notes",
-      "guards_run": 5,
-      "contradictions": [],
-      "id_clashes": [],
-      "created_at": "2026-10-12T15:10:03+00:00"
-    }
-  ],
-  "assumptions": [
-    {
-      "created_at": "2026-10-13T07:30:12+00:00",
-      "results": [
-        {
-          "decision_id": "D-0001",
-          "title": "Never retry `charge()`",
-          "claim": "The payment gateway does not deduplicate repeated charge requests",
-          "verdict": "unclear",
-          "explanation": "The gateway's docs describe idempotency keys for refunds, but say nothing about charges. Nothing found confirms that retrying a charge is now safe, so the decision stands.",
-          "urls": [
-            "https://docs.paygate.example/refunds#idempotency",
-            "https://docs.paygate.example/charges"
-          ]
-        },
-        {
-          "decision_id": "D-0008",
-          "title": "Read stock from inventory v2 with a 30s cache",
-          "claim": "Inventory v2 availability is at most 30 seconds stale",
-          "verdict": "holds",
-          "explanation": "The internal platform docs state availability is recomputed every 10 seconds from warehouse events, well inside the 30-second budget.",
-          "urls": [
-            "https://platform.larkspur.example/inventory/v2#freshness"
-          ]
-        },
-        {
-          "decision_id": "D-0003",
-          "title": "Throttle SMS sends below Fernwave's rate limit",
-          "claim": "Fernwave allows 100 requests per minute per API key",
-          "verdict": "broken",
-          "explanation": "Fernwave's current API docs list 60 requests/minute on the Standard plan since its 1 September pricing change. The limiter's 90/min ceiling is now above the vendor limit, so bursts will be dropped.",
-          "urls": [
-            "https://docs.fernwave.example/api/rate-limits",
-            "https://fernwave.example/changelog/2026-09-pricing",
-            "https://community.fernwave.example/t/429s-after-plan-change/812"
-          ]
-        }
-      ]
-    }
-  ],
-  "models": {
-    "live": true,
-    "base_url": "https://inference.example/v1",
-    "nano": "nvidia/NVIDIA-Nemotron-Nano-9B-v2",
-    "super": "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5",
-    "ultra": "nvidia/Llama-3_1-Nemotron-Ultra-253B-v1",
-    "tavily": true
+   ],
+   "created_at": "2026-10-14T14:21:12+00:00",
+   "updated_at": "2026-10-14T14:21:14+00:00",
+   "last_result": "pass",
+   "last_context": "local",
+   "last_evidence_at": "2026-10-14T14:21:23+00:00",
+   "evidence_count": 7
   },
-  "write_enabled": false,
-  "guard_sources": {
-    "D-0001": "\"\"\"Why guard for D-0001: Never retry `charge()`\n\nRule:   Checkout calls payments.gateway.charge() at most once per order, even when it raises. Retries happen only through the reconciliation job.\nReason: the gateway double-bills on retry\nSource: pr_comment #41 https://github.com/larkspur/storefront/pull/41#discussion_r1182044\nQuote:  \"Please don't wrap charge() in a retry. The gateway doesn't dedupe and we refunded 37 customers last time a timeout got retried.\"\n\nGenerated by Why. If this fails, either fix the code or supersede the decision:\n    why supersede D-0001 --reason '...'\n\"\"\"\n\nimport pytest\n\nfrom _why_support import auto_args, bound_entry, call, patch_everywhere\n\nTARGET = 'larkspur.payments.gateway:charge'\nENTRY = 'larkspur.checkout:place_order'\nMAX_CALLS = 1\n\n\ndef test_d0001_never_retry_charge():\n    entry = bound_entry(ENTRY)\n    calls = []\n\n    def injected(*args, **kwargs):\n        calls.append((args, kwargs))\n        raise TimeoutError(\"injected by Why guard D-0001\")\n\n    with patch_everywhere(TARGET, injected):\n        args, kwargs = auto_args(entry, {})\n        try:\n            call(entry, *args, **kwargs)\n        except BaseException:\n            pass  # the failure itself is expected; we only count attempts\n\n    if not calls:\n        pytest.fail(f\"Guard setup: {ENTRY} never reached {TARGET}; regenerate this guard.\")\n    assert len(calls) <= MAX_CALLS, (\n        f\"{TARGET} was called {len(calls)} times after a TimeoutError (allowed: {MAX_CALLS}). \"\n        'Violates D-0001 (Never retry `charge()`). Reason: the gateway double-bills on retry'\n    )\n",
-    "D-0002": "\"\"\"Why guard for D-0002: `parse_date()` always returns UTC\n\nRule:   larkspur.util.dates.parse_date() returns a timezone-aware datetime in UTC for every input, including strings with an offset.\nReason: order cut-off times and shipping SLAs are compared in UTC; a naive local time silently shifts deliveries by hours\nSource: commit c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5 https://github.com/larkspur/storefront/commit/c19a7d54e2b8f0a1d3c5e7f9b1a3c5e7d9f1b3a5\nQuote:  \"fix: normalise parse_date to UTC. Bangalore orders were missing the 6pm cut-off because we compared local times.\"\n\nGenerated by Why. If this fails, either fix the code or supersede the decision:\n    why supersede D-0002 --reason '...'\n\"\"\"\n\nimport datetime  # noqa: F401  (available to the predicate)\n\nfrom larkspur.util.dates import parse_date\n\n\ndef test_d0002_parse_date_always_returns_utc():\n    result = parse_date('2026-03-01T10:00:00+05:30')\n    assert result.tzinfo is not None and result.utcoffset() == datetime.timedelta(0), (\n        f\"parse_date('2026-03-01T10:00:00+05:30') returned {result!r}. \"\n        'Violates D-0002 (`parse_date()` always returns UTC). Reason: order cut-off times and shipping SLAs are compared in UTC'\n    )\n",
-    "D-0003": "\"\"\"Why guard for D-0003: Throttle SMS sends below Fernwave's rate limit\n\nRule:   notify.sms.send_batch() sends at most 90 messages per minute per API key.\nReason: Fernwave drops, rather than queues, requests over its limit, so order-shipped texts silently vanish\nSource: agent_log session 7f2c19\nQuote:  \"Fernwave allows 100 requests/minute, so I set the limiter to 90/min to leave headroom for retries.\"\n\nGenerated by Why. If this fails, either fix the code or supersede the decision:\n    why supersede D-0003 --reason '...'\n\"\"\"\n\nimport time\n\nfrom larkspur.notify import sms\n\nLIMIT_PER_MINUTE = 90\n\n\ndef test_d0003_throttle_sms_sends_below_fernwave_s(monkeypatch):\n    sent = []\n    clock = [0.0]\n    monkeypatch.setattr(time, \"monotonic\", lambda: clock[0])\n    monkeypatch.setattr(time, \"sleep\", lambda s: clock.__setitem__(0, clock[0] + s))\n    monkeypatch.setattr(sms, \"_post\", lambda payload: sent.append(clock[0]) or {\"ok\": True})\n\n    sms.send_batch([{\"to\": f\"+1555000{i:04d}\", \"body\": \"Your order shipped\"} for i in range(250)])\n\n    window = [t for t in sent if t < 60.0]\n    assert len(window) <= LIMIT_PER_MINUTE, (\n        f\"{len(window)} SMS sent in the first minute (allowed {LIMIT_PER_MINUTE}). Violates D-0003.\"\n    )\n",
-    "D-0004": "\"\"\"Why guard for D-0004: Money is integer cents, never floats\n\nRule:   No float() or float literals in price, tax or discount arithmetic under larkspur/pricing/.\nReason: float rounding produced 1-cent mismatches between the cart and the invoice, which the tax export rejects\nSource: pr_body #27 https://github.com/larkspur/storefront/pull/27\nQuote:  \"Moves all money to integer cents. Floats caused the invoice/cart penny drift in #19.\"\n\nGenerated by Why. If this fails, either fix the code or supersede the decision:\n    why supersede D-0004 --reason '...'\n\"\"\"\n\nfrom pathlib import Path\n\nfrom _why_support import scan\n\nROOT = Path(__file__).resolve().parent.parent\nPATTERN = 'float\\\\(|\\\\b\\\\d+\\\\.\\\\d+\\\\b'\nPATHS = ['larkspur/pricing']\nGLOB = '*.py'\n\n\ndef test_d0004_money_is_integer_cents_never_floats():\n    hits = scan(ROOT, PATHS, GLOB, PATTERN)\n    assert not hits, 'Violates D-0004 (Money is integer cents, never floats).' + \"\\n\" + \"\\n\".join(hits)\n",
-    "D-0008": "\"\"\"Why guard for D-0008: Read stock from inventory v2 with a 30s cache\n\nRule:   Inventory lookups go through inventory.v2.availability() behind a cache of at most 30 seconds.\nReason: the warehouse migration finished and v1 is being shut down; 30s keeps oversells under 0.1%\nSource: manual\n\nGenerated by Why. If this fails, either fix the code or supersede the decision:\n    why supersede D-0008 --reason '...'\n\"\"\"\n\nfrom unittest import mock\n\nfrom larkspur import inventory\n\n\ndef test_d0008_read_stock_from_inventory_v2_with_a_30(monkeypatch):\n    v1 = mock.Mock(side_effect=AssertionError(\"inventory v1 must not be called\"))\n    v2 = mock.Mock(return_value={\"sku\": \"LK-104\", \"available\": 7})\n    monkeypatch.setattr(inventory.v1, \"get_stock\", v1)\n    monkeypatch.setattr(inventory.v2, \"availability\", v2)\n\n    assert inventory.stock_for(\"LK-104\") == 7\n    assert inventory.CACHE_TTL_S <= 30, \"D-0008: stock cache must be 30s or less\"\n    v1.assert_not_called()\n"
+  {
+   "id": "D-0004",
+   "title": "Always compute prices in integer cents, never floats",
+   "rule": "Always compute prices in integer cents, never floats",
+   "reason": "because float rounding drift broke the refund totals",
+   "status": "proposed",
+   "kind": "custom",
+   "params": {},
+   "scope": {
+    "files": [],
+    "symbols": []
+   },
+   "source": {
+    "type": "agent_log",
+    "ref": "session:pricing-session",
+    "quote": "Always compute prices in integer cents, never floats, because float rounding drift broke the refund totals.",
+    "link": ".why/sessions/pricing-session.jsonl",
+    "author": "user",
+    "date": "2026-10-02T14:21:12+00:00"
+   },
+   "confidence": 0.65,
+   "created_at": "2026-10-14T14:21:12+00:00",
+   "updated_at": "2026-10-14T14:21:12+00:00",
+   "last_result": null,
+   "last_context": null,
+   "last_evidence_at": null,
+   "evidence_count": 0
+  },
+  {
+   "id": "D-0005",
+   "title": "Send at most 100 SMS per minute",
+   "rule": "We must send at most 100 SMS per minute",
+   "reason": "Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it",
+   "status": "active",
+   "kind": "custom",
+   "params": {},
+   "scope": {
+    "files": [],
+    "symbols": []
+   },
+   "source": {
+    "type": "commit",
+    "ref": "9c65da0738ac885807ffb7419066ebfa566f5583",
+    "quote": "We must send at most 100 SMS per minute: Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it.",
+    "link": "commit:9c65da0738ac885807ffb7419066ebfa566f5583",
+    "author": "agent: notify-session",
+    "date": "2026-09-18T14:21:12Z"
+   },
+   "confidence": 0.6,
+   "assumption": {
+    "claim": "We must send at most 100 SMS per minute: Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it.",
+    "query": "We must send at most 100 SMS per minute: Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it.",
+    "verdict": "broken",
+    "checked_at": "2026-10-14T14:21:22+00:00",
+    "explanation": "The decision assumes 100 requests, but current sources report 60 requests.",
+    "urls": [
+     "https://docs.fernwave.example/changelog/2026-09",
+     "https://docs.fernwave.example/limits"
+    ]
+   },
+   "guard": {
+    "path": "why_guards/test_d0005_send_at_most_100_sms_per_minute.py",
+    "language": "python",
+    "framework": "pytest",
+    "generated_by": "human",
+    "flaky": false,
+    "stability_runs": 3
+   },
+   "approvals": [
+    {
+     "by": "Atharva Gupta",
+     "at": "2026-10-14T14:21:14+00:00"
+    }
+   ],
+   "created_at": "2026-10-14T14:21:12+00:00",
+   "updated_at": "2026-10-14T14:21:22+00:00",
+   "last_result": "pass",
+   "last_context": "local",
+   "last_evidence_at": "2026-10-14T14:21:23+00:00",
+   "evidence_count": 8
   }
+ ],
+ "evidence": [
+  {
+   "decision_id": "D-0001",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:12+00:00"
+  },
+  {
+   "decision_id": "D-0001",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:13+00:00"
+  },
+  {
+   "decision_id": "D-0001",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:13+00:00"
+  },
+  {
+   "decision_id": "D-0002",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.01,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:13+00:00"
+  },
+  {
+   "decision_id": "D-0002",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.01,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:13+00:00"
+  },
+  {
+   "decision_id": "D-0002",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.01,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:13+00:00"
+  },
+  {
+   "decision_id": "D-0003",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:14+00:00"
+  },
+  {
+   "decision_id": "D-0003",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:14+00:00"
+  },
+  {
+   "decision_id": "D-0003",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:14+00:00"
+  },
+  {
+   "decision_id": "D-0005",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.002,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:14+00:00"
+  },
+  {
+   "decision_id": "D-0005",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.002,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:14+00:00"
+  },
+  {
+   "decision_id": "D-0005",
+   "result": "pass",
+   "context": "stability",
+   "commit": "bef869f66ee7245879baf44b27a6b30bbe1cdff3",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.002,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:14+00:00"
+  },
+  {
+   "decision_id": "D-0001",
+   "result": "pass",
+   "context": "mcp",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "634d200f18dd",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {
+    "agent": "agent-2 (checkout fix)",
+    "with_diff": true
+   },
+   "timestamp": "2026-10-14T14:21:17+00:00"
+  },
+  {
+   "decision_id": "D-0002",
+   "result": "fail",
+   "context": "mcp",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "634d200f18dd",
+   "log": "AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment\nassert 3 <= 1\n +  where 3 = len([((0, <MagicMock name='customer.card_token' id='136481189558464'>), {'idempotency_key': '34b7d32555-1'}), ((0, <MagicM...b7d32555-2'}), ((0, <MagicMock name='customer.card_token' id='136481189558464'>), {'idempotency_key': '34b7d32555-3'})])\ndef test_d0002_never_retry_charge_on_a():\n        entry = bound_entry(ENTRY)\n        calls = []\n    \n        def injected(*args, **kwargs):\n            calls.append((args, kwargs))\n            raise TimeoutError(\"injected by Why guard D-0002\")\n    \n        with patch_everywhere(TARGET, injected):\n            args, kwargs = auto_args(entry, {})\n            try:\n                call(entry, *args, **kwargs)\n            except BaseException:\n                pass  # the failure itself is expected; we only count attempts\n    \n        if not calls:\n            pytest.fail(f\"Guard setup: {ENTRY} never reached {TARGET}; regenerate this guard.\")\n>       assert len(calls) <= MAX_CALLS, (\n            f\"{TARGET} was called {len(calls)} times after a TimeoutError (allowed: {MAX_CALLS}). \"\n            'Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment'\n        )\nE       AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment\nE       assert 3 <= 1\nE        +  where 3 = len([((0, <MagicMock name='customer.card_token' id='136481189558464'>), {'idempotency_key': '34b7d32555-1'}), ((0, <MagicM...b7d32555-2'}), ((0, <MagicMock name='customer.card_token' id='136481189558464'>), {'idempotency_key': '34b7d32555-3'})])\n\nwhy_guards/test_d0002_never_retry_charge_on_a_timeout.py:38: AssertionError",
+   "duration_s": 1.511,
+   "detail": {
+    "agent": "agent-2 (checkout fix)",
+    "with_diff": true
+   },
+   "timestamp": "2026-10-14T14:21:17+00:00"
+  },
+  {
+   "decision_id": "D-0003",
+   "result": "pass",
+   "context": "mcp",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "634d200f18dd",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {
+    "agent": "agent-2 (checkout fix)",
+    "with_diff": true
+   },
+   "timestamp": "2026-10-14T14:21:17+00:00"
+  },
+  {
+   "decision_id": "D-0005",
+   "result": "pass",
+   "context": "mcp",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "634d200f18dd",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {
+    "agent": "agent-2 (checkout fix)",
+    "with_diff": true
+   },
+   "timestamp": "2026-10-14T14:21:17+00:00"
+  },
+  {
+   "decision_id": "D-0001",
+   "result": "pass",
+   "context": "pr",
+   "commit": "7802ad1ef456b370de3d27b11ade05e758f465a5",
+   "run_id": "eac60ab9ba78",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:19+00:00"
+  },
+  {
+   "decision_id": "D-0002",
+   "result": "fail",
+   "context": "pr",
+   "commit": "7802ad1ef456b370de3d27b11ade05e758f465a5",
+   "run_id": "eac60ab9ba78",
+   "log": "AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment\nassert 3 <= 1\n +  where 3 = len([((0, <MagicMock name='customer.card_token' id='134940270966976'>), {'idempotency_key': '9e003507dc-1'}), ((0, <MagicM...003507dc-2'}), ((0, <MagicMock name='customer.card_token' id='134940270966976'>), {'idempotency_key': '9e003507dc-3'})])\ndef test_d0002_never_retry_charge_on_a():\n        entry = bound_entry(ENTRY)\n        calls = []\n    \n        def injected(*args, **kwargs):\n            calls.append((args, kwargs))\n            raise TimeoutError(\"injected by Why guard D-0002\")\n    \n        with patch_everywhere(TARGET, injected):\n            args, kwargs = auto_args(entry, {})\n            try:\n                call(entry, *args, **kwargs)\n            except BaseException:\n                pass  # the failure itself is expected; we only count attempts\n    \n        if not calls:\n            pytest.fail(f\"Guard setup: {ENTRY} never reached {TARGET}; regenerate this guard.\")\n>       assert len(calls) <= MAX_CALLS, (\n            f\"{TARGET} was called {len(calls)} times after a TimeoutError (allowed: {MAX_CALLS}). \"\n            'Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment'\n        )\nE       AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment\nE       assert 3 <= 1\nE        +  where 3 = len([((0, <MagicMock name='customer.card_token' id='134940270966976'>), {'idempotency_key': '9e003507dc-1'}), ((0, <MagicM...003507dc-2'}), ((0, <MagicMock name='customer.card_token' id='134940270966976'>), {'idempotency_key': '9e003507dc-3'})])\n\nwhy_guards/test_d0002_never_retry_charge_on_a_timeout.py:38: AssertionError",
+   "duration_s": 1.511,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:19+00:00"
+  },
+  {
+   "decision_id": "D-0003",
+   "result": "pass",
+   "context": "pr",
+   "commit": "7802ad1ef456b370de3d27b11ade05e758f465a5",
+   "run_id": "eac60ab9ba78",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:19+00:00"
+  },
+  {
+   "decision_id": "D-0005",
+   "result": "pass",
+   "context": "pr",
+   "commit": "7802ad1ef456b370de3d27b11ade05e758f465a5",
+   "run_id": "eac60ab9ba78",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:19+00:00"
+  },
+  {
+   "decision_id": "D-0001",
+   "result": "fail",
+   "context": "upgrade",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "c7666fce5780",
+   "log": "AssertionError: parse_date('2026-03-01T10:00:00+05:30') returned datetime.datetime(2026, 3, 1, 10, 0). Violates D-0001 (`parse_date()` must always return UTC). Reason: because order timestamps are compared across regions and stored without offsets\nassert (None is not None)\n +  where None = datetime.datetime(2026, 3, 1, 10, 0).tzinfo\ndef test_d0001_parse_date_must_always_return():\n        result = parse_date('2026-03-01T10:00:00+05:30')\n>       assert result.tzinfo is not None and result.utcoffset().total_seconds() == 0, (\n            f\"parse_date('2026-03-01T10:00:00+05:30') returned {result!r}. \"\n            'Violates D-0001 (`parse_date()` must always return UTC). Reason: because order timestamps are compared across regions and stored without offsets'\n        )\nE       AssertionError: parse_date('2026-03-01T10:00:00+05:30') returned datetime.datetime(2026, 3, 1, 10, 0). Violates D-0001 (`parse_date()` must always return UTC). Reason: because order timestamps are compared across regions and stored without offsets\nE       assert (None is not None)\nE        +  where None = datetime.datetime(2026, 3, 1, 10, 0).tzinfo\n\nwhy_guards/test_d0001_parse_date_must_always_return_utc.py:19: AssertionError",
+   "duration_s": 0.001,
+   "detail": {
+    "package": "chronokit",
+    "from": "1.4.0",
+    "to": "2.0.0",
+    "root_cause": {
+     "api": "chronokit.parse",
+     "args": {
+      "text": "'2026-03-01T10:00:00+05:30'"
+     },
+     "before": "datetime.datetime(2026, 3, 1, 4, 30, tzinfo=datetime.timezone.utc)",
+     "after": "datetime.datetime(2026, 3, 1, 10, 0)",
+     "order": 0,
+     "candidates": [
+      "chronokit.parse"
+     ]
+    }
+   },
+   "timestamp": "2026-10-14T14:21:21+00:00"
+  },
+  {
+   "decision_id": "D-0006",
+   "result": "pass",
+   "context": "stability",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:21+00:00"
+  },
+  {
+   "decision_id": "D-0006",
+   "result": "pass",
+   "context": "stability",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:21+00:00"
+  },
+  {
+   "decision_id": "D-0006",
+   "result": "pass",
+   "context": "stability",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:21+00:00"
+  },
+  {
+   "decision_id": "D-0001",
+   "result": "pass",
+   "context": "local",
+   "commit": "b636df1dd2e4cb762b6822937841d6831d663aa9",
+   "run_id": "b49a2cdb13c8",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:22+00:00"
+  },
+  {
+   "decision_id": "D-0002",
+   "result": "pass",
+   "context": "local",
+   "commit": "b636df1dd2e4cb762b6822937841d6831d663aa9",
+   "run_id": "b49a2cdb13c8",
+   "log": "",
+   "duration_s": 0.01,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:22+00:00"
+  },
+  {
+   "decision_id": "D-0003",
+   "result": "pass",
+   "context": "local",
+   "commit": "b636df1dd2e4cb762b6822937841d6831d663aa9",
+   "run_id": "b49a2cdb13c8",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:22+00:00"
+  },
+  {
+   "decision_id": "D-0005",
+   "result": "pass",
+   "context": "local",
+   "commit": "b636df1dd2e4cb762b6822937841d6831d663aa9",
+   "run_id": "b49a2cdb13c8",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:22+00:00"
+  },
+  {
+   "decision_id": "D-0006",
+   "result": "fail",
+   "context": "merge",
+   "commit": "HEAD+agent/refunds+agent/promo",
+   "run_id": "d75f04353338",
+   "log": "AssertionError: refund_amount(1000, 15) returned 1150. Violates D-0006 (Refunds never exceed the amount charged). Reason: the gateway rejects over-refunds and flags the merchant account\nassert 1150 <= 1000\ndef test_d0006_refunds_never_exceed_the():\n        result = refund_amount(1000, 15)\n>       assert 0 <= result <= 1000, (\n            f\"refund_amount(1000, 15) returned {result!r}. \"\n            'Violates D-0006 (Refunds never exceed the amount charged). Reason: the gateway rejects over-refunds and flags the merchant account'\n        )\nE       AssertionError: refund_amount(1000, 15) returned 1150. Violates D-0006 (Refunds never exceed the amount charged). Reason: the gateway rejects over-refunds and flags the merchant account\nE       assert 1150 <= 1000\n\nwhy_guards/test_d0006_refunds_never_exceed_the_amount_charged.py:18: AssertionError",
+   "duration_s": 0.0,
+   "detail": {
+    "from": "agent/refunds",
+    "branches": [
+     "agent/refunds",
+     "agent/promo"
+    ]
+   },
+   "timestamp": "2026-10-14T14:21:22+00:00"
+  },
+  {
+   "decision_id": "D-0005",
+   "result": "fail",
+   "context": "assumption",
+   "commit": "",
+   "run_id": "",
+   "log": "The decision assumes 100 requests, but current sources report 60 requests.",
+   "duration_s": 0.0,
+   "detail": {
+    "claim": "We must send at most 100 SMS per minute: Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it.",
+    "urls": [
+     "https://docs.fernwave.example/changelog/2026-09",
+     "https://docs.fernwave.example/limits"
+    ]
+   },
+   "timestamp": "2026-10-14T14:21:22+00:00"
+  },
+  {
+   "decision_id": "D-0001",
+   "result": "pass",
+   "context": "local",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "0e5103db9391",
+   "log": "",
+   "duration_s": 0.0,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:23+00:00"
+  },
+  {
+   "decision_id": "D-0002",
+   "result": "pass",
+   "context": "local",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "0e5103db9391",
+   "log": "",
+   "duration_s": 0.01,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:23+00:00"
+  },
+  {
+   "decision_id": "D-0003",
+   "result": "pass",
+   "context": "local",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "0e5103db9391",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:23+00:00"
+  },
+  {
+   "decision_id": "D-0005",
+   "result": "pass",
+   "context": "local",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "run_id": "0e5103db9391",
+   "log": "",
+   "duration_s": 0.001,
+   "detail": {},
+   "timestamp": "2026-10-14T14:21:23+00:00"
+  }
+ ],
+ "log": [
+  {
+   "ts": "2026-10-14T14:21:12+00:00",
+   "decision_id": "D-0001",
+   "from": null,
+   "to": "proposed",
+   "actor": "why mine",
+   "note": "created from commit"
+  },
+  {
+   "ts": "2026-10-14T14:21:12+00:00",
+   "decision_id": "D-0002",
+   "from": null,
+   "to": "proposed",
+   "actor": "why mine",
+   "note": "created from commit"
+  },
+  {
+   "ts": "2026-10-14T14:21:12+00:00",
+   "decision_id": "D-0003",
+   "from": null,
+   "to": "proposed",
+   "actor": "why mine",
+   "note": "created from commit"
+  },
+  {
+   "ts": "2026-10-14T14:21:12+00:00",
+   "decision_id": "D-0004",
+   "from": null,
+   "to": "proposed",
+   "actor": "why mine",
+   "note": "created from agent_log"
+  },
+  {
+   "ts": "2026-10-14T14:21:12+00:00",
+   "decision_id": "D-0005",
+   "from": null,
+   "to": "proposed",
+   "actor": "why mine",
+   "note": "created from commit"
+  },
+  {
+   "ts": "2026-10-14T14:21:12+00:00",
+   "decision_id": "D-0001",
+   "from": "proposed",
+   "to": "proposed",
+   "actor": "Atharva Gupta",
+   "note": "guard generated: why_guards/test_d0001_parse_date_must_always_return_utc.py (template)"
+  },
+  {
+   "ts": "2026-10-14T14:21:13+00:00",
+   "decision_id": "D-0001",
+   "from": "proposed",
+   "to": "active",
+   "actor": "Atharva Gupta",
+   "note": "approved; guard passed 3/3 runs"
+  },
+  {
+   "ts": "2026-10-14T14:21:13+00:00",
+   "decision_id": "D-0002",
+   "from": "proposed",
+   "to": "proposed",
+   "actor": "Atharva Gupta",
+   "note": "guard generated: why_guards/test_d0002_never_retry_charge_on_a_timeout.py (template)"
+  },
+  {
+   "ts": "2026-10-14T14:21:13+00:00",
+   "decision_id": "D-0002",
+   "from": "proposed",
+   "to": "active",
+   "actor": "Atharva Gupta",
+   "note": "approved; guard passed 3/3 runs"
+  },
+  {
+   "ts": "2026-10-14T14:21:13+00:00",
+   "decision_id": "D-0003",
+   "from": "proposed",
+   "to": "proposed",
+   "actor": "Atharva Gupta",
+   "note": "guard generated: why_guards/test_d0003_don_t_call_print_in_larkspur.py (template)"
+  },
+  {
+   "ts": "2026-10-14T14:21:14+00:00",
+   "decision_id": "D-0003",
+   "from": "proposed",
+   "to": "active",
+   "actor": "Atharva Gupta",
+   "note": "approved; guard passed 3/3 runs"
+  },
+  {
+   "ts": "2026-10-14T14:21:14+00:00",
+   "decision_id": "D-0005",
+   "from": "proposed",
+   "to": "proposed",
+   "actor": "Atharva Gupta",
+   "note": "guard generated: why_guards/test_d0005_send_at_most_100_sms_per_minute.py (human)"
+  },
+  {
+   "ts": "2026-10-14T14:21:14+00:00",
+   "decision_id": "D-0005",
+   "from": "proposed",
+   "to": "active",
+   "actor": "Atharva Gupta",
+   "note": "approved; guard passed 3/3 runs"
+  },
+  {
+   "ts": "2026-10-14T14:21:22+00:00",
+   "decision_id": "D-0005",
+   "from": "active",
+   "to": "active",
+   "actor": "why assume",
+   "note": "assumption broken: The decision assumes 100 requests, but current sources report 60 requests."
+  }
+ ],
+ "checks": [
+  {
+   "run_id": "0e5103db9391",
+   "context": "local",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "items": [
+    {
+     "decision_id": "D-0001",
+     "title": "`parse_date()` must always return UTC",
+     "reason": "because order timestamps are compared across regions and stored without offsets",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+     "source_ref": "d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0002",
+     "title": "Never retry `charge()` on a timeout",
+     "reason": "the gateway double-bills on retry, because the first request may already have captured the payment",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:261ad2b90edab0cdcb50548ee432751b07797d32",
+     "source_ref": "261ad2b90edab0cdcb50548ee432751b07797d32",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0003",
+     "title": "Don't call `print()` in larkspur/",
+     "reason": "everything goes through the logger so card tokens are scrubbed before logs leave the box",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:2887e040bf408cb4a6918285b0a57250b52a4f50",
+     "source_ref": "2887e040bf408cb4a6918285b0a57250b52a4f50",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0005",
+     "title": "Send at most 100 SMS per minute",
+     "reason": "Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:9c65da0738ac885807ffb7419066ebfa566f5583",
+     "source_ref": "9c65da0738ac885807ffb7419066ebfa566f5583",
+     "cached": false
+    }
+   ],
+   "duration_s": 0.19,
+   "created_at": "2026-10-14T14:21:23+00:00",
+   "ok": true,
+   "violations": []
+  },
+  {
+   "run_id": "b49a2cdb13c8",
+   "context": "local",
+   "commit": "b636df1dd2e4cb762b6822937841d6831d663aa9",
+   "items": [
+    {
+     "decision_id": "D-0001",
+     "title": "`parse_date()` must always return UTC",
+     "reason": "because order timestamps are compared across regions and stored without offsets",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+     "source_ref": "d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0002",
+     "title": "Never retry `charge()` on a timeout",
+     "reason": "the gateway double-bills on retry, because the first request may already have captured the payment",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:261ad2b90edab0cdcb50548ee432751b07797d32",
+     "source_ref": "261ad2b90edab0cdcb50548ee432751b07797d32",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0003",
+     "title": "Don't call `print()` in larkspur/",
+     "reason": "everything goes through the logger so card tokens are scrubbed before logs leave the box",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:2887e040bf408cb4a6918285b0a57250b52a4f50",
+     "source_ref": "2887e040bf408cb4a6918285b0a57250b52a4f50",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0005",
+     "title": "Send at most 100 SMS per minute",
+     "reason": "Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:9c65da0738ac885807ffb7419066ebfa566f5583",
+     "source_ref": "9c65da0738ac885807ffb7419066ebfa566f5583",
+     "cached": false
+    }
+   ],
+   "duration_s": 0.18,
+   "created_at": "2026-10-14T14:21:22+00:00",
+   "ok": true,
+   "violations": []
+  },
+  {
+   "run_id": "eac60ab9ba78",
+   "context": "pr",
+   "commit": "7802ad1ef456b370de3d27b11ade05e758f465a5",
+   "items": [
+    {
+     "decision_id": "D-0001",
+     "title": "`parse_date()` must always return UTC",
+     "reason": "because order timestamps are compared across regions and stored without offsets",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+     "source_ref": "d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0002",
+     "title": "Never retry `charge()` on a timeout",
+     "reason": "the gateway double-bills on retry, because the first request may already have captured the payment",
+     "result": "fail",
+     "log": "AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment\nassert 3 <= 1\n +  where 3 = len([((0, <MagicMock name='customer.card_token' id='134940270966976'>), {'idempotency_key': '9e003507dc-1'}), ((0, <MagicM...003507dc-2'}), ((0, <MagicMock name='customer.card_token' id='134940270966976'>), {'idempotency_key': '9e003507dc-3'})])\ndef test_d0002_never_retry_charge_on_a():\n        entry = bound_entry(ENTRY)\n        calls = []\n    \n        def injected(*args, **kwargs):\n            calls.append((args, kwargs))\n            raise TimeoutError(\"injected by Why guard D-0002\")\n    \n        with patch_everywhere(TARGET, injected):\n            args, kwargs = auto_args(entry, {})\n            try:\n                call(entry, *args, **kwargs)\n            except BaseException:\n                pass  # the failure itself is expected; we only count attempts\n    \n        if not calls:\n            pytest.fail(f\"Guard setup: {ENTRY} never reached {TARGET}; regenerate this guard.\")\n>       assert len(calls) <= MAX_CALLS, (\n            f\"{TARGET} was called {len(calls)} times after a TimeoutError (allowed: {MAX_CALLS}). \"\n            'Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment'\n        )\nE       AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment\nE       assert 3 <= 1\nE        +  where 3 = len([((0, <MagicMock name='customer.card_token' id='134940270966976'>), {'idempotency_key': '9e003507dc-1'}), ((0, <MagicM...003507dc-2'}), ((0, <MagicMock name='customer.card_token' id='134940270966976'>), {'idempotency_key': '9e003507dc-3'})])\n\nwhy_guards/test_d0002_never_retry_charge_on_a_timeout.py:38: AssertionError",
+     "source_link": "commit:261ad2b90edab0cdcb50548ee432751b07797d32",
+     "source_ref": "261ad2b90edab0cdcb50548ee432751b07797d32",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0003",
+     "title": "Don't call `print()` in larkspur/",
+     "reason": "everything goes through the logger so card tokens are scrubbed before logs leave the box",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:2887e040bf408cb4a6918285b0a57250b52a4f50",
+     "source_ref": "2887e040bf408cb4a6918285b0a57250b52a4f50",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0005",
+     "title": "Send at most 100 SMS per minute",
+     "reason": "Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:9c65da0738ac885807ffb7419066ebfa566f5583",
+     "source_ref": "9c65da0738ac885807ffb7419066ebfa566f5583",
+     "cached": false
+    }
+   ],
+   "duration_s": 1.69,
+   "created_at": "2026-10-14T14:21:19+00:00",
+   "ok": false,
+   "violations": [
+    "D-0002"
+   ]
+  },
+  {
+   "run_id": "634d200f18dd",
+   "context": "mcp",
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "items": [
+    {
+     "decision_id": "D-0001",
+     "title": "`parse_date()` must always return UTC",
+     "reason": "because order timestamps are compared across regions and stored without offsets",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+     "source_ref": "d56ad4f4c9100955b3f1c6843f5643c458ca7349",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0002",
+     "title": "Never retry `charge()` on a timeout",
+     "reason": "the gateway double-bills on retry, because the first request may already have captured the payment",
+     "result": "fail",
+     "log": "AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment\nassert 3 <= 1\n +  where 3 = len([((0, <MagicMock name='customer.card_token' id='136481189558464'>), {'idempotency_key': '34b7d32555-1'}), ((0, <MagicM...b7d32555-2'}), ((0, <MagicMock name='customer.card_token' id='136481189558464'>), {'idempotency_key': '34b7d32555-3'})])\ndef test_d0002_never_retry_charge_on_a():\n        entry = bound_entry(ENTRY)\n        calls = []\n    \n        def injected(*args, **kwargs):\n            calls.append((args, kwargs))\n            raise TimeoutError(\"injected by Why guard D-0002\")\n    \n        with patch_everywhere(TARGET, injected):\n            args, kwargs = auto_args(entry, {})\n            try:\n                call(entry, *args, **kwargs)\n            except BaseException:\n                pass  # the failure itself is expected; we only count attempts\n    \n        if not calls:\n            pytest.fail(f\"Guard setup: {ENTRY} never reached {TARGET}; regenerate this guard.\")\n>       assert len(calls) <= MAX_CALLS, (\n            f\"{TARGET} was called {len(calls)} times after a TimeoutError (allowed: {MAX_CALLS}). \"\n            'Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment'\n        )\nE       AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment\nE       assert 3 <= 1\nE        +  where 3 = len([((0, <MagicMock name='customer.card_token' id='136481189558464'>), {'idempotency_key': '34b7d32555-1'}), ((0, <MagicM...b7d32555-2'}), ((0, <MagicMock name='customer.card_token' id='136481189558464'>), {'idempotency_key': '34b7d32555-3'})])\n\nwhy_guards/test_d0002_never_retry_charge_on_a_timeout.py:38: AssertionError",
+     "source_link": "commit:261ad2b90edab0cdcb50548ee432751b07797d32",
+     "source_ref": "261ad2b90edab0cdcb50548ee432751b07797d32",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0003",
+     "title": "Don't call `print()` in larkspur/",
+     "reason": "everything goes through the logger so card tokens are scrubbed before logs leave the box",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:2887e040bf408cb4a6918285b0a57250b52a4f50",
+     "source_ref": "2887e040bf408cb4a6918285b0a57250b52a4f50",
+     "cached": false
+    },
+    {
+     "decision_id": "D-0005",
+     "title": "Send at most 100 SMS per minute",
+     "reason": "Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it",
+     "result": "pass",
+     "log": "",
+     "source_link": "commit:9c65da0738ac885807ffb7419066ebfa566f5583",
+     "source_ref": "9c65da0738ac885807ffb7419066ebfa566f5583",
+     "cached": false
+    }
+   ],
+   "duration_s": 1.69,
+   "created_at": "2026-10-14T14:21:17+00:00",
+   "ok": false,
+   "violations": [
+    "D-0002"
+   ],
+   "agent": "agent-2 (checkout fix)",
+   "with_diff": true
+  }
+ ],
+ "upgrades": [
+  {
+   "id": "c7666fce5780",
+   "package": "chronokit",
+   "from_version": "1.4.0",
+   "to_version": "2.0.0",
+   "verdict": "blocked",
+   "breaks": [
+    {
+     "decision_id": "D-0001",
+     "title": "`parse_date()` must always return UTC",
+     "reason": "because order timestamps are compared across regions and stored without offsets",
+     "log": "AssertionError: parse_date('2026-03-01T10:00:00+05:30') returned datetime.datetime(2026, 3, 1, 10, 0). Violates D-0001 (`parse_date()` must always return UTC). Reason: because order timestamps are compared across regions and stored without offsets\nassert (None is not None)\n +  where None = datetime.datetime(2026, 3, 1, 10, 0).tzinfo\ndef test_d0001_parse_date_must_always_return():\n        result = parse_date('2026-03-01T10:00:00+05:30')\n>       assert result.tzinfo is not None and result.utcoffset().total_seconds() == 0, (\n            f\"parse_date('2026-03-01T10:00:00+05:30') returned {result!r}. \"\n            'Violates D-0001 (`parse_date()` must always return UTC). Reason: because order timestamps are compared across regions and stored without offsets'\n        )\nE       AssertionError: parse_date('2026-03-01T10:00:00+05:30') returned datetime.datetime(2026, 3, 1, 10, 0). Violates D-0001 (`parse_date()` must always return UTC). Reason: because order timestamps are compared across regions and stored without offsets\nE       assert (None is not None)\nE        +  where None = datetime.datetime(2026, 3, 1, 10, 0).tzinfo\n\nwhy_guards/test_d0001_parse_date_must_always_return_utc.py:19: AssertionError",
+     "root_cause": {
+      "api": "chronokit.parse",
+      "args": {
+       "text": "'2026-03-01T10:00:00+05:30'"
+      },
+      "before": "datetime.datetime(2026, 3, 1, 4, 30, tzinfo=datetime.timezone.utc)",
+      "after": "datetime.datetime(2026, 3, 1, 10, 0)",
+      "order": 0,
+      "candidates": [
+       "chronokit.parse"
+      ]
+     },
+     "explanation": "`chronokit.parse` returns datetime.datetime(2026, 3, 1, 10, 0) under chronokit 2.0.0 but datetime.datetime(2026, 3, 1, 4, 30, tzinfo=datetime.timezone.utc) under 1.4.0, which breaks D-0001 (`parse_date()` must always return UTC)."
+    }
+   ],
+   "guards_run": 4,
+   "passed_before": 4,
+   "passed_after": 3,
+   "guarantees": [],
+   "registry": {},
+   "commit": "9f18d78c8a815ec2a13ccea6db5b2842f8d17ae5",
+   "error": "",
+   "created_at": "2026-10-14T14:21:19+00:00"
+  }
+ ],
+ "merges": [
+  {
+   "id": "d75f04353338",
+   "ok": false,
+   "base": "HEAD",
+   "other": "agent/refunds+agent/promo",
+   "branches": [
+    "agent/refunds",
+    "agent/promo"
+   ],
+   "guards_run": 5,
+   "contradictions": [
+    {
+     "decision_id": "D-0006",
+     "title": "Refunds never exceed the amount charged",
+     "reason": "the gateway rejects over-refunds and flags the merchant account",
+     "rule": "Refunds never exceed the amount charged",
+     "from": "agent/refunds",
+     "broken_by": [
+      "agent/promo"
+     ],
+     "guard": "why_guards/test_d0006_refunds_never_exceed_the_amount_charged.py",
+     "log": "AssertionError: refund_amount(1000, 15) returned 1150. Violates D-0006 (Refunds never exceed the amount charged). Reason: the gateway rejects over-refunds and flags the merchant account\nassert 1150 <= 1000\ndef test_d0006_refunds_never_exceed_the():\n        result = refund_amount(1000, 15)\n>       assert 0 <= result <= 1000, (\n            f\"refund_amount(1000, 15) returned {result!r}. \"\n            'Violates D-0006 (Refunds never exceed the amount charged). Reason: the gateway rejects over-refunds and flags the merchant account'\n        )\nE       AssertionError: refund_amount(1000, 15) returned 1150. Violates D-0006 (Refunds never exceed the amount charged). Reason: the gateway rejects over-refunds and flags the merchant account\nE       assert 1150 <= 1000\n\nwhy_guards/test_d0006_refunds_never_exceed_the_amount_charged.py:18: AssertionError"
+    }
+   ],
+   "id_clashes": [],
+   "created_at": "2026-10-14T14:21:22+00:00"
+  }
+ ],
+ "assumptions": [
+  {
+   "created_at": "2026-10-14T14:21:22+00:00",
+   "results": [
+    {
+     "decision_id": "D-0005",
+     "title": "Send at most 100 SMS per minute",
+     "claim": "We must send at most 100 SMS per minute: Fernwave's API rate limit is 100 requests per minute, and they suspend API keys that exceed it.",
+     "verdict": "broken",
+     "explanation": "The decision assumes 100 requests, but current sources report 60 requests.",
+     "urls": [
+      "https://docs.fernwave.example/changelog/2026-09",
+      "https://docs.fernwave.example/limits"
+     ]
+    }
+   ]
+  }
+ ],
+ "consults": [
+  {
+   "ts": "2026-10-14T14:21:15+00:00",
+   "tool": "why_decisions_for",
+   "args": {
+    "path": "larkspur/checkout.py",
+    "line": null
+   },
+   "decisions": [
+    "D-0002",
+    "D-0003"
+   ],
+   "agent": "agent-2 (checkout fix)"
+  },
+  {
+   "ts": "2026-10-14T14:21:17+00:00",
+   "tool": "why_run_guards",
+   "args": {
+    "diff_lines": 43
+   },
+   "decisions": [
+    "D-0002"
+   ],
+   "agent": "agent-2 (checkout fix)"
+  }
+ ],
+ "models": {
+  "live": false,
+  "base_url": "https://api.tokenfactory.nebius.com/v1",
+  "nano": "nvidia/NVIDIA-Nemotron-Nano-9B-v2",
+  "super": "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5",
+  "ultra": "nvidia/Llama-3_1-Nemotron-Ultra-253B-v1",
+  "tavily": false
+ },
+ "write_enabled": false,
+ "team": null,
+ "review_queue": [
+  {
+   "id": "D-0004",
+   "title": "Always compute prices in integer cents, never floats",
+   "rule": "Always compute prices in integer cents, never floats",
+   "confidence": 0.65,
+   "source": "agent_log",
+   "source_ref": "session:pricing-session",
+   "created_at": "2026-10-14T14:21:12+00:00",
+   "approvals": [],
+   "needed": 1,
+   "owners": [],
+   "assigned": [],
+   "waiting_on": [
+    "1 more approval(s)"
+   ]
+  }
+ ],
+ "auth_required": false,
+ "registry": [],
+ "stats": {
+  "review": {
+   "approved": 4,
+   "rejected": 0,
+   "pending": 1,
+   "approval_rate": 1.0,
+   "by_source": {
+    "commit": {
+     "approved": 4
+    }
+   },
+   "target": 0.6
+  },
+  "enforcement": {
+   "gated_runs": 3,
+   "runs_with_violations": 3,
+   "violations_caught": 3,
+   "by_context": {
+    "pr": 1,
+    "upgrade": 1,
+    "merge": 1
+   },
+   "upgrades_checked": 1,
+   "upgrades_blocked": 1,
+   "merges_checked": 1,
+   "merge_contradictions": 1,
+   "decisions_violated": 3,
+   "overridden": [],
+   "false_positive_rate_upper_bound": 0.0,
+   "target": 0.1
+  },
+  "prevention": {
+   "consults": 1,
+   "self_checks": 1,
+   "self_checks_that_caught": 1,
+   "agent_proposals": 0
+  },
+  "guards": {
+   "active": 4,
+   "violated": 0,
+   "quarantined_flaky": 0
+  },
+  "weekly": [
+   {
+    "week": "2026-W42",
+    "caught": 3,
+    "prevented": 1
+   }
+  ]
+ },
+ "guard_sources": {
+  "D-0001": "\"\"\"Why guard for D-0001: `parse_date()` must always return UTC\n\nRule:   `parse_date('2026-03-01T10:00:00+05:30')` must always return UTC\nReason: because order timestamps are compared across regions and stored without offsets\nSource: commit d56ad4f4c9100955b3f1c6843f5643c458ca7349 commit:d56ad4f4c9100955b3f1c6843f5643c458ca7349\nQuote:  \"`parse_date('2026-03-01T10:00:00+05:30')` must always return UTC because order timestamps are compared across regions and stored without offsets.\"\n\nGenerated by Why. If this fails, either fix the code or supersede the decision:\n    why supersede D-0001 --reason '...'\n\"\"\"\n\nimport datetime  # noqa: F401  (available to the predicate)\n\nfrom larkspur.dates import parse_date\n\n\ndef test_d0001_parse_date_must_always_return():\n    result = parse_date('2026-03-01T10:00:00+05:30')\n    assert result.tzinfo is not None and result.utcoffset().total_seconds() == 0, (\n        f\"parse_date('2026-03-01T10:00:00+05:30') returned {result!r}. \"\n        'Violates D-0001 (`parse_date()` must always return UTC). Reason: because order timestamps are compared across regions and stored without offsets'\n    )\n",
+  "D-0002": "\"\"\"Why guard for D-0002: Never retry `charge()` on a timeout\n\nRule:   Never retry `charge()` on a timeout\nReason: the gateway double-bills on retry, because the first request may already have captured the payment\nSource: commit 261ad2b90edab0cdcb50548ee432751b07797d32 commit:261ad2b90edab0cdcb50548ee432751b07797d32\nQuote:  \"Never retry `charge()` on a timeout: the gateway double-bills on retry, because the first request may already have captured the payment.\"\n\nGenerated by Why. If this fails, either fix the code or supersede the decision:\n    why supersede D-0002 --reason '...'\n\"\"\"\n\nimport pytest\n\nfrom _why_support import auto_args, bound_entry, call, patch_everywhere\n\nTARGET = 'larkspur.payments.gateway:charge'\nENTRY = 'larkspur.checkout:place_order'\nMAX_CALLS = 1\n\n\ndef test_d0002_never_retry_charge_on_a():\n    entry = bound_entry(ENTRY)\n    calls = []\n\n    def injected(*args, **kwargs):\n        calls.append((args, kwargs))\n        raise TimeoutError(\"injected by Why guard D-0002\")\n\n    with patch_everywhere(TARGET, injected):\n        args, kwargs = auto_args(entry, {})\n        try:\n            call(entry, *args, **kwargs)\n        except BaseException:\n            pass  # the failure itself is expected; we only count attempts\n\n    if not calls:\n        pytest.fail(f\"Guard setup: {ENTRY} never reached {TARGET}; regenerate this guard.\")\n    assert len(calls) <= MAX_CALLS, (\n        f\"{TARGET} was called {len(calls)} times after a TimeoutError (allowed: {MAX_CALLS}). \"\n        'Violates D-0002 (Never retry `charge()` on a timeout). Reason: the gateway double-bills on retry, because the first request may already have captured the payment'\n    )\n",
+  "D-0003": "\"\"\"Why guard for D-0003: Don't call `print()` in larkspur/\n\nRule:   Don't call `print()` in larkspur/\nReason: everything goes through the logger so card tokens are scrubbed before logs leave the box\nSource: commit 2887e040bf408cb4a6918285b0a57250b52a4f50 commit:2887e040bf408cb4a6918285b0a57250b52a4f50\nQuote:  \"Don't call `print()` in larkspur/: everything goes through the logger so card tokens are scrubbed before logs leave the box.\"\n\nGenerated by Why. If this fails, either fix the code or supersede the decision:\n    why supersede D-0003 --reason '...'\n\"\"\"\n\nfrom pathlib import Path\n\nfrom _why_support import scan\n\nROOT = Path(__file__).resolve().parent.parent\nPATTERN = '\\\\bprint\\\\s*\\\\('\nPATHS = ['larkspur/']\nGLOB = '*.py'\n\n\ndef test_d0003_don_t_call_print_in_larkspur():\n    hits = scan(ROOT, PATHS, GLOB, PATTERN)\n    assert not hits, \"Violates D-0003 (Don't call `print()` in larkspur/). Reason: everything goes through the logger so card tokens are scrubbed before logs leave the box\" + \"\\n\" + \"\\n\".join(hits)\n",
+  "D-0005": "\"\"\"Why guard for D-0005: Send at most 100 SMS per minute (hand-written by Dev Raman).\n\nReason: Fernwave's API rate limit is 100 requests per minute, and they suspend keys that exceed it.\n\"\"\"\n\nfrom unittest import mock\n\nfrom larkspur import notify\n\n\ndef test_d0005_send_at_most_100_sms_per_minute():\n    sent_at, clock = [], [0.0]\n\n    def fake_sleep(s):\n        clock[0] += s\n\n    with mock.patch.object(notify.time, \"sleep\", fake_sleep):\n        notify.send_batch(range(250), lambda m: sent_at.append(clock[0]))\n\n    worst = max(sum(1 for t in sent_at if start <= t < start + 60) for start in sent_at)\n    assert worst <= 100, f\"{worst} SMS sent within one minute. Violates D-0005: Fernwave suspends keys over 100/min.\"\n"
+ }
 }

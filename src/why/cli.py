@@ -216,6 +216,49 @@ def cmd_review(args) -> int:
     return 0
 
 
+def _pct(x) -> str:
+    return "—" if x is None else f"{x * 100:.0f}%"
+
+
+def cmd_stats(args) -> int:
+    from .stats import compute
+
+    st = store_from(args).require()
+    m = compute(st)
+    if args.json:
+        print(json.dumps(m, indent=2))
+        return 0
+    r, e, p = m["review"], m["enforcement"], m["prevention"]
+    ok = lambda good: c("on target", "32") if good else c("below target", "33")  # noqa: E731
+    print(bold("Mining quality"))
+    rate = r["approval_rate"]
+    print(f"  approved at review   {r['approved']} of {r['approved'] + r['rejected']} mined  "
+          f"{bold(_pct(rate))}  {dim('target ≥ ' + _pct(r['target']))}  {ok(rate >= r['target']) if rate is not None else ''}")
+    for src, cnt in r["by_source"].items():
+        print(f"    {src:<18} {cnt.get('approved', 0)} approved, {cnt.get('rejected', 0)} rejected")
+    if r["pending"]:
+        print(dim(f"  {r['pending']} mined decision(s) still waiting for review"))
+    print(bold("\nBreaks caught before merge"))
+    ctx = ", ".join(f"{k} {v}" for k, v in sorted(e["by_context"].items())) or "none yet"
+    print(f"  violations caught    {e['violations_caught']}  {dim('(' + ctx + ')')}")
+    print(f"  upgrades blocked     {e['upgrades_blocked']} of {e['upgrades_checked']} checked")
+    print(f"  merge contradictions {e['merge_contradictions']} in {e['merges_checked']} merge check(s)")
+    fp = e["false_positive_rate_upper_bound"]
+    print(f"  overridden           {len(e['overridden'])} of {e['decisions_violated']} violated decision(s) "
+          f"{bold(_pct(fp))}  {dim('false-positive upper bound, target < ' + _pct(e['target']))}"
+          + (f"  {ok(fp < e['target'])}" if fp is not None else ""))
+    print(bold("\nPrevention (MCP)"))
+    print(f"  agents asked first   {p['consults']}   self-checks {p['self_checks']} "
+          f"({p['self_checks_that_caught']} caught a break)   proposals {p['agent_proposals']}")
+    g = m["guards"]
+    print(dim(f"\n{g['active']} active · {g['violated']} violated · {g['quarantined_flaky']} quarantined as flaky"))
+    if m["weekly"]:
+        print(bold("\nBy week"))
+        for w in m["weekly"]:
+            print(f"  {w['week']}  caught {w.get('caught', 0)}  prevented {w.get('prevented', 0)}")
+    return 0
+
+
 def cmd_team(args) -> int:
     from . import team
 
@@ -346,15 +389,7 @@ def cmd_blame(args) -> int:
     return 0
 
 
-def cmd_upgrade(args) -> int:
-    from .upgrade import upgrade
-
-    st = store_from(args).require()
-    print(dim(f"Sandboxing {args.spec}: running guards before and after the bump…"))
-    rep = upgrade(st, args.spec, find_links=args.find_links, from_version=args.from_version)
-    if args.json:
-        print(json.dumps(rep.to_dict(), indent=2))
-        return 0 if rep.verdict == "approved" else 1
+def _print_upgrade(rep) -> int:
     if rep.error:
         print(c(f"Upgrade check failed to run: {rep.error}", "31"))
         return 2
@@ -376,6 +411,35 @@ def cmd_upgrade(args) -> int:
         return 1
     print(c("Approved: every decision still holds.", "32"))
     return 0
+
+
+def cmd_upgrade(args) -> int:
+    from .upgrade import check_bumps, upgrade
+
+    st = store_from(args).require()
+    if not args.spec:
+        if not args.base:
+            print(c("Give a package (`why upgrade pkg@1.2.3`) or --base to check every bump on this branch.", "31"))
+            return 2
+        print(dim(f"Looking for dependency bumps between {args.base} and {args.head}…"))
+        results = check_bumps(st, args.base, args.head, find_links=args.find_links)
+        if args.json:
+            print(json.dumps([{"bump": vars(b), "report": r.to_dict()} for b, r in results], indent=2))
+            return 0 if all(r.verdict == "approved" for _, r in results) else 1
+        if not results:
+            print("No dependency bumps found.")
+            return 0
+        codes = []
+        for b, rep in results:
+            print(dim(f"\n{b.package} {b.before} → {b.after} (from {b.file})"))
+            codes.append(_print_upgrade(rep))
+        return max(codes)
+    print(dim(f"Sandboxing {args.spec}: running guards before and after the bump…"))
+    rep = upgrade(st, args.spec, find_links=args.find_links, from_version=args.from_version)
+    if args.json:
+        print(json.dumps(rep.to_dict(), indent=2))
+        return 0 if rep.verdict == "approved" else 1
+    return _print_upgrade(rep)
 
 
 def cmd_assume(args) -> int:
@@ -740,6 +804,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_review)
 
+    s = sub.add_parser("stats", help="success metrics: approval rate, breaks caught, overrides, prevention")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_stats)
+
     s = sub.add_parser("team", help="members, roles and owners (teams mode), and who you are")
     s.set_defaults(fn=cmd_team)
 
@@ -753,7 +821,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(fn=cmd_blame)
 
     s = sub.add_parser("upgrade", help="check a dependency bump against every decision")
-    s.add_argument("spec", help="pkg@version")
+    s.add_argument("spec", nargs="?", help="pkg@version (omit with --base to check every bump on a branch)")
+    s.add_argument("--base", help="detect bumps between this ref and --head from lockfiles / manifests")
+    s.add_argument("--head", default="HEAD")
     s.add_argument("--find-links", help="extra directory/URL of wheels (private or local packages)")
     s.add_argument("--from", dest="from_version", help="pin the current version explicitly")
     s.add_argument("--json", action="store_true")

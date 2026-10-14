@@ -67,6 +67,9 @@ step "why assume: re-verify outside facts (recorded Tavily response; Fernwave is
 step "why blame larkspur/checkout.py:20"
 "${WHY[@]}" blame larkspur/checkout.py:20
 
+step "why stats: approval rate, breaks caught before merge, prevention"
+"${WHY[@]}" stats
+
 step "why check on main"
 "${WHY[@]}" check || true
 

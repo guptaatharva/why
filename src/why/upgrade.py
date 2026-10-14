@@ -307,6 +307,7 @@ def _upgrade_py(store: Store, pkg: str, to: str, find_links: str | None, from_ve
 def upgrade(store: Store, spec: str, find_links: str | None = None, from_version: str | None = None,
             record: bool = True) -> UpgradeReport:
     pkg, to = parse_spec(spec)
+    find_links = find_links or store.config.get("find_links")  # private index / wheel dir from config
     decisions = {d.id: d for d in store.decisions(("active", "violated")) if d.guard and not d.guard.flaky}
     rid = uuid.uuid4().hex[:12]
     commit = head(store.root)
@@ -352,3 +353,20 @@ def upgrade(store: Store, spec: str, find_links: str | None = None, from_version
     if record:
         store.save_report("upgrade", f"{pkg}@{to}-{rid}", report.to_dict())
     return report
+
+
+MAX_BUMPS = 5
+
+
+def check_bumps(store: Store, base: str, head: str = "HEAD", find_links: str | None = None,
+                record: bool = True, limit: int = MAX_BUMPS) -> list[tuple[Any, UpgradeReport]]:
+    """Run an upgrade check for every dependency bump between `base` and `head` (e.g. a Renovate PR).
+
+    Guards and code come from the current checkout (the trusted base); only the dependency changes."""
+    from . import bumps
+
+    eco = "npm" if store.config.get("language") == "javascript" else "pypi"
+    out = []
+    for b in bumps.find(store.root, base, head, eco)[:limit]:
+        out.append((b, upgrade(store, b.spec, find_links=find_links, from_version=b.before, record=record)))
+    return out

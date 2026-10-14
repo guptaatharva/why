@@ -207,6 +207,19 @@ export interface Snapshot {
   auth_required?: boolean;
   /** Packages with published guarantees on this server's registry (F10). */
   registry?: RegistryPackage[];
+  /** The PRD's success metrics, computed from the log and evidence. */
+  stats?: Metrics;
+}
+
+export interface Metrics {
+  review: { approved: number; rejected: number; pending: number; approval_rate: number | null; target: number;
+    by_source: Record<string, { approved?: number; rejected?: number }> };
+  enforcement: { violations_caught: number; by_context: Record<string, number>; upgrades_checked: number;
+    upgrades_blocked: number; merges_checked: number; merge_contradictions: number; decisions_violated: number;
+    overridden: string[]; false_positive_rate_upper_bound: number | null; target: number };
+  prevention: { consults: number; self_checks: number; self_checks_that_caught: number; agent_proposals: number };
+  guards: { active: number; violated: number; quarantined_flaky: number };
+  weekly: { week: string; caught?: number; prevented?: number }[];
 }
 
 export interface Consult {

@@ -23,10 +23,14 @@ jobs:
           WHY_OFFLINE: "1"
       - name: Upgrade micro-benchmark
         run: uv run python bench/run.py --json bench-result.json
+      - name: "Scale check: guard checks on a 50k-line repo stay under 5 minutes"
+        run: uv run python bench/scale.py --json scale-result.json
       - uses: actions/upload-artifact@v4
         with:
           name: bench-result
-          path: bench-result.json
+          path: |
+            bench-result.json
+            scale-result.json
 
   dashboard:
     runs-on: ubuntu-latest

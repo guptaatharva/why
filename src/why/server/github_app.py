@@ -175,6 +175,35 @@ def render_siblings(found: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def render_upgrades(results: list[tuple[Any, Any]]) -> str:
+    lines = ["\n## Dependency upgrades in this PR",
+             "Why installed each new version in a sandbox and ran every guard (plus any guarantees the library "
+             "published) before and after.\n"]
+    for b, rep in results:
+        head = f"**{b.package}** {rep.from_version or b.before} → {rep.to_version or b.after}"
+        if rep.error:
+            lines.append(f"- ⚠️ {head}: could not run ({rep.error[-300:]})")
+        elif rep.verdict == "blocked":
+            lines.append(f"- ❌ {head}: breaks {len(rep.breaks)} decision(s)")
+            for br in rep.breaks:
+                rc = br.root_cause or {}
+                lines.append(f"  - **{br.decision_id}** {br.title}" + (f". Root cause: `{rc['api']}`" if rc.get("api") else ""))
+                if "before" in rc:
+                    lines.append(f"    - before: `{str(rc['before'])[:200]}`  \n      after: `{str(rc['after'])[:200]}`")
+                if br.explanation:
+                    lines.append(f"    - {br.explanation[:600]}")
+        else:
+            lines.append(f"- ✅ {head}: all {rep.guards_run} guard(s) still hold")
+    return "\n".join(lines)
+
+
+def upgrade_checks(store: Store, base_ref: str, head_sha: str) -> list[tuple[Any, Any]]:
+    """F5 on GitHub: a PR that bumps dependencies (Renovate, Dependabot, an agent) gets an upgrade check."""
+    from ..upgrade import check_bumps
+
+    return check_bumps(store, f"origin/{base_ref}", head_sha)
+
+
 def handle_pull_request(payload: dict[str, Any]) -> None:
     pr = payload["pull_request"]
     repo = payload["repository"]["full_name"]
@@ -199,6 +228,16 @@ def handle_pull_request(payload: dict[str, Any]) -> None:
                                           "pr_title": pr["title"]})
                     title, summary = render_summary(report, store)
                     conclusion = "success" if report.ok else "failure"
+                    upgrades = upgrade_checks(store, base_ref, head_sha)
+                    if upgrades:
+                        summary += render_upgrades(upgrades)
+                        blocked = [b for b, r in upgrades if r.verdict == "blocked"]
+                        if blocked:
+                            conclusion = "failure"
+                            title = (f"Upgrade blocked: {', '.join(f'{b.package} {b.after}' for b in blocked)}"
+                                     + ("" if report.ok else f"; {len(report.violations)} decision(s) violated"))
+                        elif report.ok:
+                            title += f"; {len(upgrades)} dependency upgrade(s) checked"
                     siblings = sibling_conflicts(c, store, repo, pr)
                     if siblings:
                         summary += render_siblings(siblings)

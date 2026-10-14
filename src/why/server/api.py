@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, Body, Header, HTTPException
 
-from .. import llm, team
+from .. import llm, stats, team
 from ..gitutil import github_slug, head
 from ..models import STATES, now
 from ..store import Store, StoreError, normalize_id
@@ -98,6 +98,7 @@ def repo_snapshot(st: Store, name: str | None = None, repo_id: str = "local") ->
         "review_queue": team.queue(st),
         "auth_required": bool(_tokens()),
         "registry": _registry_listing(),
+        "stats": stats.compute(st),
     }
 
 
@@ -131,6 +132,12 @@ def list_repos() -> list[dict[str, Any]]:
             if last else None,
         })
     return out
+
+
+@router.get("/stats")
+def server_stats() -> dict[str, Any]:
+    stores = {rid: Store(root) for rid, root in registry.repos.items() if Store(root).exists}
+    return {**stats.server_wide(stores), "per_repo": {rid: stats.compute(st) for rid, st in stores.items()}}
 
 
 @router.get("/repos/{repo_id}")

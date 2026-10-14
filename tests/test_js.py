@@ -3,6 +3,7 @@
 Builds demo/build_demo_js.py (needs pnpm or a working npm, and the npm registry or a warm cache).
 """
 
+import os
 import shutil
 import subprocess
 import sys
@@ -79,3 +80,56 @@ def test_npm_upgrade_names_the_changed_api(js_repo):
     assert brk.root_cause["before"].endswith('Z"') and not brk.root_cause["after"].endswith('Z"')
     assert (js_repo.root / "node_modules" / "chronokit" / "package.json").read_text() == node_modules_before, \
         "upgrade checks must never touch the repo's own node_modules"
+
+
+def test_js_guards_run_on_the_nebius_backend(js_repo, tmp_path, monkeypatch):
+    """The Nebius job for a TS repo: bundle through (stand-in) object storage, install from the lockfile with the
+    repo's package manager, run Vitest, and read the JSON report back from the job log. The generated job script
+    runs locally with bash."""
+    import shlex
+
+    import yaml
+    from test_nebius import FakeBucket
+
+    from why import objstore, runner
+
+    cfg_path = js_repo.dir / "config.yaml"
+    original = cfg_path.read_text()
+    cfg = yaml.safe_load(original)
+    cfg.update(sandbox="nebius", nebius={"bucket": "why-sandboxes"})
+    cfg_path.write_text(yaml.safe_dump(cfg))
+    bucket = FakeBucket()
+    shims = tmp_path / "bin"
+    shims.mkdir()
+    (shims / "corepack").write_text("#!/bin/sh\nexit 0\n")  # the node image enables pnpm; here it is installed
+    (shims / "corepack").chmod(0o755)
+    logs, scripts = {}, []
+
+    def fake_nebius(*args):
+        if args[:3] == ("ai", "job", "create"):
+            assert args[args.index("--image") + 1] == "node:22-slim"
+            script = shlex.split(args[args.index("--args") + 1])[1]
+            scripts.append(script)
+            r = subprocess.run(["bash", "-c", script], capture_output=True, text=True,
+                               env={**os.environ, "PATH": f"{shims}:{os.environ['PATH']}"})
+            logs["j"] = r.stdout + r.stderr
+            return "j"
+        if args[:3] == ("ai", "job", "get"):
+            return '{"status": {"state": "COMPLETED"}}'
+        return logs["j"]
+
+    monkeypatch.setenv("WHY_NO_CACHE", "1")  # earlier tests checked this tree locally; force a real job
+    monkeypatch.setattr(runner, "INJECT_LIMIT", 0)
+    monkeypatch.setattr(runner, "JOB_ROOT", str(tmp_path / "job"))
+    monkeypatch.setattr(runner, "_nebius", fake_nebius)
+    monkeypatch.setattr(runner.shutil, "which", lambda n, _w=shutil.which: "/usr/bin/nebius" if n == "nebius" else _w(n))
+    monkeypatch.setattr(objstore.Bucket, "from_config", classmethod(lambda cls, c: bucket))
+    try:
+        report = check(js_repo, context="nebius-js", record=False, apply_transitions=False)
+    finally:
+        cfg_path.write_text(original)
+    assert "node -e" in scripts[0] and "python" not in scripts[0]
+    assert "--frozen-lockfile" in scripts[0] and "vitest run" in scripts[0]
+    assert report.ok and len(report.items) == 3, [(i.decision_id, i.result, i.log[-300:]) for i in report.items] + \
+        [logs.get("j", "")[-1500:]]
+    assert bucket.deleted and not bucket.objects

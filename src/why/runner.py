@@ -246,6 +246,8 @@ class Sandbox:
         if self.store.config.get("language", "python") != "python":
             from .guards import js_framework
 
+            if backend == "nebius":
+                return _merge(outcome, run_on_nebius(self, existing, extra_args or [], js=js_framework(self.store)))
             return _merge(outcome, self._run_js(existing, js_framework(self.store), extra_args or [], env))
         if backend == "nebius":
             return _merge(outcome, run_on_nebius(self, existing, extra_args or []))
@@ -289,17 +291,23 @@ class Sandbox:
                            timeout=self.store.config.get("timeout_s", 300))
         out = RunOutcome(raw_log=r.stdout + r.stderr, returncode=r.returncode, duration_s=round(time.time() - t0, 2))
         if report.exists():
-            data = json.loads(report.read_text())
-            for tr in data.get("testResults", []):
-                rel = os.path.relpath(tr["name"], self.dir) if os.path.isabs(tr["name"]) else tr["name"]
-                did = decision_id_from_path(rel) or "?"
-                for a in tr.get("assertionResults", []):
-                    status = {"passed": "pass", "failed": "fail"}.get(a.get("status"), "skipped")
-                    out.results.append(GuardResult(did, rel, status, "\n".join(a.get("failureMessages", []))[-3000:],
-                                                   (a.get("duration") or 0) / 1000))
-                if not tr.get("assertionResults") and tr.get("status") == "failed":
-                    out.results.append(GuardResult(did, rel, "error", (tr.get("message") or "")[-3000:]))
+            out.results = parse_js_report(json.loads(report.read_text()), str(self.dir))
         return out
+
+
+def parse_js_report(data: dict[str, Any], base: str) -> list[GuardResult]:
+    """Jest `--json` and Vitest `--reporter=json` share the testResults/assertionResults shape."""
+    out = []
+    for tr in data.get("testResults", []):
+        rel = os.path.relpath(tr["name"], base) if os.path.isabs(tr["name"]) else tr["name"]
+        did = decision_id_from_path(rel) or "?"
+        for a in tr.get("assertionResults", []):
+            status = {"passed": "pass", "failed": "fail"}.get(a.get("status"), "skipped")
+            out.append(GuardResult(did, rel, status, "\n".join(a.get("failureMessages", []))[-3000:],
+                                   (a.get("duration") or 0) / 1000))
+        if not tr.get("assertionResults") and tr.get("status") == "failed":
+            out.append(GuardResult(did, rel, "error", (tr.get("message") or "")[-3000:]))
+    return out
 
 
 def _merge(a: RunOutcome, b: RunOutcome) -> RunOutcome:
@@ -353,8 +361,21 @@ def _nebius(*args: str) -> str:
     return r.stdout
 
 
-def run_on_nebius(sb: Sandbox, paths: list[str], extra: list[str]) -> RunOutcome:
-    """Run guards as a Nebius Serverless AI job (CPU platform). Requires the `nebius` CLI, logged in."""
+def _job_install_js(dir: Path, cfg_pm: str | None) -> str:
+    """Install the repo's JS deps inside the job from its own lockfile (node_modules is never shipped)."""
+    pm = cfg_pm or next((n for lock, n in (("pnpm-lock.yaml", "pnpm"), ("yarn.lock", "yarn"),
+                                          ("package-lock.json", "npm")) if (dir / lock).exists()), "npm")
+    return {"pnpm": "corepack enable && pnpm install --frozen-lockfile --reporter=silent",
+            "yarn": "corepack enable && yarn install --frozen-lockfile --silent",
+            "npm": "npm ci --no-audit --no-fund" if (dir / "package-lock.json").exists()
+            else "npm install --no-audit --no-fund"}[pm]
+
+
+def run_on_nebius(sb: Sandbox, paths: list[str], extra: list[str], js: str | None = None) -> RunOutcome:
+    """Run guards as a Nebius Serverless AI job (CPU platform). Requires the `nebius` CLI, logged in.
+
+    Python repos run pytest in `nebius.image` (python:3.12-slim); JS/TS repos (`js` = vitest | jest) install
+    their deps from the lockfile and run the guards in `nebius.image_js` (node:22-slim)."""
     assert sb.dir
     if not shutil.which("nebius"):
         raise RuntimeError("sandbox: nebius selected but the `nebius` CLI is not installed")
@@ -383,20 +404,35 @@ def run_on_nebius(sb: Sandbox, paths: list[str], extra: list[str]) -> RunOutcome
     try:
         if bucket is not None:
             bucket.put(key, data)
-            # Double quotes only: the whole script is wrapped in single quotes for `bash -c`.
-            fetch = (f"python -c \"import sys,urllib.request as u;u.urlretrieve(sys.argv[1],sys.argv[2])\" "
-                     f"\"{bucket.url('GET', key, 3600)}\" {R}/why/bundle.tgz && ")
+            # No single quotes anywhere: the whole script is wrapped in single quotes for `bash -c`.
+            if js:  # node images have no python; Node 22 has fetch built in
+                fetch = ("node -e \"fetch(process.argv[1]).then(r=>{if(!r.ok)process.exit(1);return r.arrayBuffer()})"
+                         f".then(b=>process.stdout.write(Buffer.from(b)))\" \"{bucket.url('GET', key, 3600)}\" "
+                         f"> {R}/why/bundle.tgz && ")
+            else:
+                fetch = (f"python -c \"import sys,urllib.request as u;u.urlretrieve(sys.argv[1],sys.argv[2])\" "
+                         f"\"{bucket.url('GET', key, 3600)}\" {R}/why/bundle.tgz && ")
             inject: list[str] = []
         else:
             fetch = ""
             inject = ["--inject-file", f"{bundle}:/why/bundle.tgz"]
-        script = (
-            f"mkdir -p {R}/w {R}/why && {fetch}cd {R}/w && tar xzf {R}/why/bundle.tgz && pip install -q pytest && "
-            f"{setup} && PYTHONPATH={pypath} python -m pytest -q -p no:cacheprovider --junitxml={R}/w/j.xml "
-            f"{' '.join(extra)} {' '.join(paths)}; echo {BEGIN}; base64 -w0 {R}/w/j.xml; echo; echo {END}"
-        )
+        unpack = f"mkdir -p {R}/w {R}/why && {fetch}cd {R}/w && tar xzf {R}/why/bundle.tgz"
+        if js:
+            out_file = f"{R}/w/.why-js-report.json"
+            run = (f"npx --no-install vitest run --reporter=json --outputFile={out_file} --root {R}/w"
+                   if js == "vitest" else f"npx --no-install jest --json --outputFile={out_file} --rootDir {R}/w")
+            script = (f"{unpack} && {_job_install_js(sb.dir, sb.store.config.get('package_manager'))} && {setup} && "
+                      f"{run} {' '.join(extra)} {' '.join(paths)}; echo {BEGIN}; base64 -w0 {out_file}; echo; echo {END}")
+            image = cfg.get("image_js", "node:22-slim")
+        else:
+            script = (
+                f"{unpack} && pip install -q pytest && "
+                f"{setup} && PYTHONPATH={pypath} python -m pytest -q -p no:cacheprovider --junitxml={R}/w/j.xml "
+                f"{' '.join(extra)} {' '.join(paths)}; echo {BEGIN}; base64 -w0 {R}/w/j.xml; echo; echo {END}"
+            )
+            image = cfg.get("image", "python:3.12-slim")
         job_id = _nebius(
-            "ai", "job", "create", "--name", f"why-{int(t0)}", "--image", cfg.get("image", "python:3.12-slim"),
+            "ai", "job", "create", "--name", f"why-{int(t0)}", "--image", image,
             "--container-command", "bash", "--args", f"-c '{script}'",
             "--platform", cfg.get("platform", "cpu-d3"), "--preset", cfg.get("preset", "4vcpu-16gb"),
             "--timeout", cfg.get("timeout", "1h"), *inject,
@@ -417,7 +453,14 @@ def run_on_nebius(sb: Sandbox, paths: list[str], extra: list[str]) -> RunOutcome
     out = RunOutcome(raw_log=logs[-20000:], duration_s=round(time.time() - t0, 2))
     if BEGIN in logs and END in logs:
         b64 = logs.split(BEGIN, 1)[1].split(END, 1)[0].strip()
-        out.results = parse_junit(base64.b64decode(b64).decode(errors="replace"))
+        raw = base64.b64decode(b64).decode(errors="replace") if b64 else ""
+        if js:
+            try:
+                out.results = parse_js_report(json.loads(raw), f"{JOB_ROOT}/w")
+            except json.JSONDecodeError:
+                out.results = []
+        else:
+            out.results = parse_junit(raw)
     if not out.results:
         out.results = [GuardResult(decision_id_from_path(p) or "?", p, "error", f"nebius job {job_id} {status}")
                        for p in paths]

@@ -2905,3 +2905,26 @@ code.inline {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---- success metrics ---- */
+.metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.metric-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.metric-label {
+  font-size: 13px;
+}
+.metric-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.text-amber {
+  color: var(--amber);
+}

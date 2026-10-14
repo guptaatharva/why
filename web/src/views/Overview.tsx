@@ -52,6 +52,7 @@ export function Overview() {
         </div>
         <div className="col col-side">
           <ReviewQueue />
+          <MetricsCard />
           <UpgradeMini />
           <AssumptionMini />
         </div>
@@ -418,6 +419,65 @@ function ReviewQueue() {
         ))}
       </ul>
     </div>
+  );
+}
+
+function pct(x: number | null | undefined) {
+  return x == null ? "—" : `${Math.round(x * 100)}%`;
+}
+
+function MetricsCard() {
+  const { snap } = useApp();
+  const m = snap.stats;
+  if (!m) return null;
+  const rate = m.review.approval_rate;
+  const fp = m.enforcement.false_positive_rate_upper_bound;
+  const reviewed = m.review.approved + m.review.rejected;
+  const rows: { label: string; value: string; note: string; tone?: "green" | "amber" }[] = [
+    {
+      label: "Mined decisions approved",
+      value: pct(rate),
+      note: reviewed ? `${m.review.approved} of ${reviewed} · target ≥ ${pct(m.review.target)}` : "none reviewed yet",
+      tone: rate == null ? undefined : rate >= m.review.target ? "green" : "amber",
+    },
+    {
+      label: "Breaks caught before merge",
+      value: String(m.enforcement.violations_caught),
+      note:
+        Object.entries(m.enforcement.by_context)
+          .map(([k, v]) => `${CONTEXT_LABEL[k] ?? k} ${v}`)
+          .join(" · ") || "none yet",
+    },
+    {
+      label: "Overridden after a violation",
+      value: pct(fp),
+      note: `${m.enforcement.overridden.length} of ${m.enforcement.decisions_violated} · false-positive ceiling, target < ${pct(m.enforcement.target)}`,
+      tone: fp == null ? undefined : fp < m.enforcement.target ? "green" : "amber",
+    },
+    {
+      label: "Agents that asked first",
+      value: String(m.prevention.consults),
+      note: `${m.prevention.self_checks_that_caught} of ${m.prevention.self_checks} self-checks caught a break`,
+    },
+  ];
+  return (
+    <section className="card">
+      <div className="card-head">
+        <h3>Success metrics</h3>
+        <span className="muted small mono">why stats</span>
+      </div>
+      <div className="metrics">
+        {rows.map((r) => (
+          <div key={r.label} className="metric">
+            <div className="metric-top">
+              <span className="metric-label">{r.label}</span>
+              <span className={classNames("metric-value", r.tone && `text-${r.tone}`)}>{r.value}</span>
+            </div>
+            <div className="muted small">{r.note}</div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

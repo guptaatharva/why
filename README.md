@@ -33,14 +33,19 @@ Decisions live in `.why/decisions/*.yaml` and guards in `why_guards/`. Both are 
 
 ## Status
 
-**Works today** (covered by 53 offline tests and the demo script):
+**Works today** (covered by 58 offline tests, the demo script and the benchmarks):
 
 - Mining from git history and local agent session logs, using the rule-based miner
 - Guard templates for Python (pytest) and TypeScript/JavaScript (Vitest, Jest), with 3x stability runs
-- `why check` in a sandbox with trusted guards; results cached per code tree
+- `why check` in a sandbox with trusted guards, with results cached per code tree. It takes 0.4s with
+  24 guards on a generated 50k-line repo (`bench/scale.py`). That measures Why's overhead only; a real
+  repo adds its own install and import time.
 - `why upgrade` with root-cause diffing for PyPI and npm packages. It caught 6/6 breaks and had 0/2
   false positives on 8 hand-written benchmark cases in `bench/`. That is a small self-made set, not
   BBCBench.
+- Dependency-bump detection from `uv.lock`, `poetry.lock`, `requirements*.txt`, `pyproject.toml`,
+  `package-lock.json`, `pnpm-lock.yaml` and `package.json`. `why upgrade --base` and the GitHub Action
+  use it.
 - `why merge` across parallel branches
 - `why assume`: checks outside facts (vendor limits) against search results. Tested with recorded
   responses.
@@ -48,6 +53,8 @@ Decisions live in `.why/decisions/*.yaml` and guards in `why_guards/`. Both are 
 - Web dashboard (`why serve`)
 - `why blame`, `why log`, `why audit` (JSON/CSV/HTML)
 - Teams mode: roles, code owners, required approvals, review queue
+- `why stats`: the success metrics (approval rate of mined decisions, breaks caught, overrides after a
+  violation, MCP prevention)
 - Published guarantees: `why publish` plus a registry that `why upgrade` pulls from. Tested with an
   in-process server.
 
@@ -56,8 +63,10 @@ Decisions live in `.why/decisions/*.yaml` and guards in `why_guards/`. Both are 
 - Nemotron models on Nebius Token Factory for mining, guard writing and explanations (tested only with
   a stubbed model)
 - Live Tavily search
-- GitHub App check runs (tested against a mocked GitHub API)
-- Nebius Serverless Jobs as the sandbox backend, including object storage for repos over 64 KiB
+- GitHub App check runs, including upgrade checks on dependency-bump PRs (tested against a mocked
+  GitHub API)
+- Nebius Serverless Jobs as the sandbox backend, for Python and JS/TS, with object storage for repos over
+  64 KiB. The generated job scripts are run locally in tests.
 - Entire Checkpoints input (tested on a synthetic checkpoint branch, not real Entire output)
 - `Dockerfile` for the hosted demo (not built yet)
 - Decisions of kind `custom` (e.g. "prices in integer cents") need a model to write the guard. Offline,
@@ -89,7 +98,7 @@ From source:
 ```bash
 git clone https://github.com/guptaatharva/why && cd why
 uv sync
-uv run pytest -q                              # 53 tests, offline
+uv run pytest -q                              # 58 tests, offline
 FAST=1 bash demo/run_demo.sh --no-serve       # the demo story below, about 30s
 bash demo/run_demo.sh                         # same, then the dashboard on http://127.0.0.1:7357
 ```
@@ -109,12 +118,12 @@ green. Why's check on that branch (code from the branch, guards from `main`):
 
 ```
 $ why check --ref agent/fix-checkout-timeouts --base main
-Why check · 4 guard(s) · b3dcc12d56 · 1.71s
+Why check · 4 guard(s) · 7802ad1ef4 · 1.69s
 
-  PASS  D-0001 `parse_date('2026-03-01T10:00:00+05:30')` must always return UTC
+  PASS  D-0001 `parse_date()` must always return UTC
   FAIL  D-0002 Never retry `charge()` on a timeout
         reason: the gateway double-bills on retry, because the first request may already have captured the payment
-        source: 5699fbb44cb01654f04e7d0d4bddf0ac3194451d
+        source: 261ad2b90edab0cdcb50548ee432751b07797d32
         AssertionError: larkspur.payments.gateway:charge was called 3 times after a TimeoutError (allowed: 1). Violates D-0002 ...
   PASS  D-0003 Don't call `print()` in larkspur/
   PASS  D-0005 Send at most 100 SMS per minute
@@ -123,10 +132,12 @@ Why check · 4 guard(s) · b3dcc12d56 · 1.71s
 ```
 
 The same run blocks a dependency bump (`chronokit` 1.4.0 to 2.0.0). It names the root cause:
-`chronokit.parse` stops returning UTC, which breaks D-0001.
+`chronokit.parse` stops returning UTC, which breaks D-0001. A Renovate or Dependabot PR gets the same
+check automatically from the GitHub App or the GitHub Action, which detect bumps from the lockfile
+(`why upgrade --base main`).
 
 ```
-  BREAK D-0001 `parse_date('2026-03-01T10:00:00+05:30')` must always return UTC
+  BREAK D-0001 `parse_date()` must always return UTC
         root cause: chronokit.parse
         before: datetime.datetime(2026, 3, 1, 4, 30, tzinfo=datetime.timezone.utc)
         after:  datetime.datetime(2026, 3, 1, 10, 0)
@@ -152,14 +163,18 @@ All company, vendor and package names in the demo are fictional.
 | `why init`, `why mine`, `why review` | Set up `.why/`, propose decisions from history, list what awaits review |
 | `why approve / reject / supersede / retire <id>` | Change a decision's state; every change is logged with who and why |
 | `why check [--ref X --base main]` | Run active guards in a sandbox |
-| `why upgrade <pkg>@<ver>` | Run guards before and after a dependency bump; report the root cause |
+| `why upgrade <pkg>@<ver>` / `--base main` | Run guards before and after a dependency bump (or every bump on this branch); report the root cause |
 | `why merge <branch>...` | Run every branch's guards on the merged result |
 | `why assume` | Re-check outside facts a decision depends on |
 | `why log`, `why blame file:line`, `why audit` | History, which decisions govern a line, export for review |
+| `why stats` | Approval rate of mined decisions, breaks caught, overrides, agent prevention |
+| `why team` | Members, roles and code owners (Teams mode) |
 | `why mcp`, `why mcp-install` | Serve decisions to coding agents over MCP |
 | `why publish`, `why guarantees` | Publish decisions as guarantees of a library release; list a package's guarantees |
 | `why serve` | Dashboard, JSON API, GitHub App webhook, MCP over HTTP, guarantee registry |
 | `why doctor` | Check keys, models, sandbox and MCP setup |
+
+Configuration, environment variables, Teams mode, CI and GitHub App setup: [docs/reference.md](docs/reference.md).
 
 ## Tech stack
 

@@ -93,7 +93,9 @@ def split_rule(sentence: str, context: str) -> tuple[str, str]:
 
 
 def _title(rule: str) -> str:
-    t = re.sub(r"^(we|you|agents?|the code|code)\s+(should|must|will)\s+", "", rule, flags=re.I)
+    # `parse_date('2026-03-01T10:00:00+05:30')` reads as noise in a title: keep the function, drop the example.
+    t = re.sub(r"`([A-Za-z_][\w.]*)\([^`]+\)`", r"`\1()`", rule)
+    t = re.sub(r"^(we|you|agents?|the code|code)\s+(should|must|will)\s+", "", t, flags=re.I)
     t = t[0].upper() + t[1:] if t else t
     return t if len(t) <= 72 else t[:69].rsplit(" ", 1)[0] + "…"
 
