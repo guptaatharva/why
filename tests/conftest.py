@@ -14,6 +14,10 @@ def offline(monkeypatch):
     """Tests never call a model or Tavily."""
     monkeypatch.setenv("WHY_OFFLINE", "1")
     monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    # Tests make commits; CI runners have no git identity configured.
+    for var, val in (("GIT_AUTHOR_NAME", "Why Tests"), ("GIT_AUTHOR_EMAIL", "tests@why.example"),
+                     ("GIT_COMMITTER_NAME", "Why Tests"), ("GIT_COMMITTER_EMAIL", "tests@why.example")):
+        monkeypatch.setenv(var, val)
 
 
 @pytest.fixture(scope="session", autouse=True)
