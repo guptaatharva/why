@@ -272,11 +272,52 @@ class Sandbox:
                 out.results.append(GuardResult(decision_id_from_path(p) or "?", p, "error", log[-3000:]))
         return out
 
+    def vitest_config(self, setup: Path | None = None) -> Path:
+        """A config that extends the project's own and also includes the guards folder.
+
+        Projects often narrow `test.include` (e.g. to tests/**), which would make Vitest refuse to run anything
+        in why_guards/. mergeConfig concatenates arrays, so the project's own include, setupFiles, aliases and
+        environment all still apply."""
+        assert self.dir
+        gd = self.store.config["guards_dir"]
+        base = next((c for c in ("vitest.config.ts", "vitest.config.mts", "vitest.config.js", "vitest.config.mjs",
+                                 "vite.config.ts", "vite.config.mts", "vite.config.js") if (self.dir / c).exists()),
+                    None)
+        test = {"include": [f"{gd}/**/*.test.{{ts,js,mts,mjs,cts,cjs}}"]}
+        if setup:
+            test["setupFiles"] = [str(setup)]
+        cfg = self.dir / "why.vitest.config.mts"
+        override = f"defineConfig({{ test: {json.dumps(test)} }})"
+        if base:
+            cfg.write_text(f'import {{ defineConfig, mergeConfig }} from "vitest/config";\nimport base from "./{base}";\n'
+                           f"export default mergeConfig(base, {override});\n")
+        else:
+            cfg.write_text(f'import {{ defineConfig }} from "vitest/config";\nexport default {override};\n')
+        return cfg
+
+    def jest_config(self, setup: Path | None = None) -> Path:
+        """Extend the project's Jest config so the guards folder is always matched (testMatch / roots)."""
+        assert self.dir
+        gd = self.store.config["guards_dir"]
+        base = next((c for c in ("jest.config.js", "jest.config.cjs", "jest.config.json") if (self.dir / c).exists()),
+                    None)
+        load = f'require("./{base}")' if base else 'require("./package.json").jest || {}'
+        extra = f", setupFilesAfterEnv: [...(base.setupFilesAfterEnv || []), {json.dumps(str(setup))}]" if setup else ""
+        cfg = self.dir / "why.jest.config.cjs"
+        cfg.write_text(f"const base = {load};\nconst {{ testRegex, ...rest }} = base;\n"
+                       f"module.exports = {{ ...rest, rootDir: __dirname, roots: [\"<rootDir>\"],\n"
+                       f"  testMatch: [\"<rootDir>/{gd}/**/*.test.[jt]s\"],\n"
+                       f"  testPathIgnorePatterns: [\"/node_modules/\"]{extra} }};\n")
+        return cfg
+
     def _run_js(self, paths: list[str], framework: str = "jest", extra: list[str] | None = None,
                 env: dict[str, str] | None = None) -> RunOutcome:
         """Jest and Vitest both write the same JSON report shape (testResults/assertionResults)."""
         assert self.dir
         report = self.dir / ".why-js-report.json"
+        if "--config" not in (extra or []):
+            extra = ["--config", str(self.vitest_config() if framework == "vitest" else self.jest_config()),
+                     *(extra or [])]
         if framework == "vitest":
             local = self.dir / "node_modules" / ".bin" / "vitest"
             runner = [str(local)] if local.exists() else ["npx", "--no-install", "vitest"]
@@ -382,6 +423,7 @@ def run_on_nebius(sb: Sandbox, paths: list[str], extra: list[str], js: str | Non
     from .objstore import Bucket
 
     cfg = sb.store.config.get("nebius", {})
+    js_cfg = (sb.vitest_config() if js == "vitest" else sb.jest_config()).name if js else ""  # shipped in the bundle
     data = _bundle(sb.dir)
     bundle = Path(tempfile.mkstemp(suffix=".tgz")[1])
     bundle.write_bytes(data)
@@ -419,8 +461,9 @@ def run_on_nebius(sb: Sandbox, paths: list[str], extra: list[str], js: str | Non
         unpack = f"mkdir -p {R}/w {R}/why && {fetch}cd {R}/w && tar xzf {R}/why/bundle.tgz"
         if js:
             out_file = f"{R}/w/.why-js-report.json"
-            run = (f"npx --no-install vitest run --reporter=json --outputFile={out_file} --root {R}/w"
-                   if js == "vitest" else f"npx --no-install jest --json --outputFile={out_file} --rootDir {R}/w")
+            run = (f"npx --no-install vitest run --config {R}/w/{js_cfg} --reporter=json --outputFile={out_file} "
+                   f"--root {R}/w" if js == "vitest" else
+                   f"npx --no-install jest --config {R}/w/{js_cfg} --json --outputFile={out_file} --rootDir {R}/w")
             script = (f"{unpack} && {_job_install_js(sb.dir, sb.store.config.get('package_manager'))} && {setup} && "
                       f"{run} {' '.join(extra)} {' '.join(paths)}; echo {BEGIN}; base64 -w0 {out_file}; echo; echo {END}")
             image = cfg.get("image_js", "node:22-slim")

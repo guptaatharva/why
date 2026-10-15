@@ -133,3 +133,17 @@ def test_js_guards_run_on_the_nebius_backend(js_repo, tmp_path, monkeypatch):
     assert report.ok and len(report.items) == 3, [(i.decision_id, i.result, i.log[-300:]) for i in report.items] + \
         [logs.get("j", "")[-1500:]]
     assert bucket.deleted and not bucket.objects
+
+
+def test_guards_run_when_the_project_narrows_vitest_include(js_repo):
+    """Projects often limit Vitest to tests/**; Why's guards in why_guards/ must still run."""
+    cfg = js_repo.root / "vitest.config.ts"
+    had = cfg.read_text() if cfg.exists() else None
+    cfg.write_text('import { defineConfig } from "vitest/config";\n'
+                   'export default defineConfig({ test: { include: ["tests/**/*.test.ts"] } });\n')
+    try:
+        report = check(js_repo, context="local", record=False, apply_transitions=False)
+    finally:
+        cfg.write_text(had) if had is not None else cfg.unlink()
+    assert report.items and all(i.result == "pass" for i in report.items), \
+        [(i.decision_id, i.result, i.log[-300:]) for i in report.items]

@@ -33,7 +33,7 @@ Decisions live in `.why/decisions/*.yaml` and guards in `why_guards/`. Both are 
 
 ## Status
 
-**Works today** (covered by 58 offline tests, the demo script and the benchmarks):
+**Works today** (covered by 59 offline tests, the demo script and the benchmarks):
 
 - Mining from git history and local agent session logs, using the rule-based miner
 - Guard templates for Python (pytest) and TypeScript/JavaScript (Vitest, Jest), with 3x stability runs
@@ -98,7 +98,7 @@ From source:
 ```bash
 git clone https://github.com/guptaatharva/why && cd why
 uv sync
-uv run pytest -q                              # 58 tests, offline
+uv run pytest -q                              # 59 tests, offline
 FAST=1 bash demo/run_demo.sh --no-serve       # the demo story below, about 30s
 bash demo/run_demo.sh                         # same, then the dashboard on http://127.0.0.1:7357
 ```

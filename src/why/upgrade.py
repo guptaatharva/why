@@ -211,15 +211,7 @@ def _run_traced_js(sb: Sandbox, paths: list[str], pkg: str, label: str) -> tuple
     gd = sb.dir / sb.store.config["guards_dir"]
     setup = gd / "_why_trace.setup.ts"
     setup.write_text((Path(__file__).parent / "trace_setup_js.txt").read_text().replace("__WHY_PKG__", pkg))
-    base = next((c for c in ("vitest.config.ts", "vitest.config.mts", "vitest.config.js", "vitest.config.mjs",
-                             "vite.config.ts", "vite.config.mts", "vite.config.js") if (sb.dir / c).exists()), None)
-    cfg = sb.dir / "why.vitest.config.mts"
-    if base:
-        cfg.write_text(f'import {{ defineConfig, mergeConfig }} from "vitest/config";\nimport base from "./{base}";\n'
-                       f'export default mergeConfig(base, defineConfig({{ test: {{ setupFiles: ["{setup}"] }} }}));\n')
-    else:
-        cfg.write_text(f'import {{ defineConfig }} from "vitest/config";\n'
-                       f'export default defineConfig({{ test: {{ setupFiles: ["{setup}"] }} }});\n')
+    cfg = sb.vitest_config(setup)
     out_file = sb.dir / f".why-trace-{label}.json"
     out_file.unlink(missing_ok=True)
     outcome = sb.run(paths, extra_args=["--config", str(cfg)], env={"WHY_TRACE_OUT": str(out_file)})
@@ -232,11 +224,7 @@ def _run_traced_jest(sb: Sandbox, paths: list[str], pkg: str, label: str) -> tup
     assert sb.dir
     setup = sb.dir / sb.store.config["guards_dir"] / "_why_trace.setup.cjs"
     setup.write_text((Path(__file__).parent / "trace_setup_jest.txt").read_text().replace("__WHY_PKG__", pkg))
-    base = next((c for c in ("jest.config.js", "jest.config.cjs", "jest.config.json") if (sb.dir / c).exists()), None)
-    load = f'require("./{base}")' if base else 'require("./package.json").jest || {}'
-    cfg = sb.dir / "why.jest.config.cjs"
-    cfg.write_text(f"const base = {load};\nmodule.exports = {{ ...base, rootDir: __dirname,\n"
-                   f"  setupFilesAfterEnv: [...(base.setupFilesAfterEnv || []), {json.dumps(str(setup))}] }};\n")
+    cfg = sb.jest_config(setup)
     out_file = sb.dir / f".why-trace-{label}.json"
     out_file.unlink(missing_ok=True)
     outcome = sb.run(paths, extra_args=["--config", str(cfg)], env={"WHY_TRACE_OUT": str(out_file)})
